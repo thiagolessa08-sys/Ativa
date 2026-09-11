@@ -234,6 +234,14 @@ def deliveries(f: Filters) -> dict[str, Any]:
                 round(100.0*count(*) filter(where c.data_entrega is not null and c.data_entrega<=c.data_prev_ent)/nullif(count(*) filter(where c.data_entrega is not null),0),1) sla
             from ctrc c where {where} group by 1 order by shipments desc limit 15
         """, params),
+        "destination_states": query(f"""
+            select trim(c.uf_dest) uf, count(*) shipments,
+                count(*) filter(where c.data_entrega is null and c.data_prev_ent < %(end)s) delayed,
+                round(100.0*count(*) filter(where c.data_entrega is not null and c.data_entrega<=c.data_prev_ent)/nullif(count(*) filter(where c.data_entrega is not null),0),1) sla,
+                coalesce(sum(c.vlr_frete),0) revenue
+            from ctrc c where {where} and c.uf_dest is not null
+            group by 1 order by shipments desc
+        """, params),
     }
 
 

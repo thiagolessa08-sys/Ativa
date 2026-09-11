@@ -887,7 +887,79 @@ function Operations({ data }: { data: any }) {
 
 function Deliveries({ data }: { data: any }) {
   const sla = data?.sla_trend || [],
-    late = data?.lateness || [];
+    late = data?.lateness || [],
+    states: Row[] = data?.destination_states || [],
+    cities: Row[] = data?.destination_cities || [];
+  const stateLayout: Record<string, { column: number; row: number }> = {
+    RR: { column: 4, row: 1 }, AP: { column: 7, row: 1 }, AM: { column: 2, row: 2 },
+    PA: { column: 5, row: 2 }, MA: { column: 8, row: 2 }, CE: { column: 10, row: 2 },
+    AC: { column: 1, row: 4 }, RO: { column: 2, row: 4 }, PI: { column: 8, row: 4 },
+    PE: { column: 10, row: 4 }, AL: { column: 11, row: 4 }, MT: { column: 4, row: 5 },
+    TO: { column: 6, row: 5 }, BA: { column: 9, row: 5 }, SE: { column: 11, row: 5 },
+    MS: { column: 4, row: 7 }, GO: { column: 6, row: 6 }, DF: { column: 7, row: 6 },
+    MG: { column: 8, row: 7 }, ES: { column: 11, row: 7 }, SP: { column: 7, row: 8 },
+    RJ: { column: 9, row: 8 }, PR: { column: 6, row: 9 }, SC: { column: 7, row: 10 },
+    RS: { column: 6, row: 11 },
+  };
+  const stateMax = Math.max(...states.map((r) => Number(r.shipments || 0)), 1);
+  const heatColor = (value: number, max: number) => {
+    const ratio = Math.max(0, Math.min(value / max, 1));
+    const start = [220, 233, 248], end = [23, 70, 143];
+    return `rgb(${start.map((v, i) => Math.round(v + (end[i] - v) * ratio)).join(",")})`;
+  };
+  const cityHeatData = cities
+    .slice(0, 12)
+    .reverse()
+    .map((r, index) => [0, index, Number(r.shipments || 0)]);
+  const cityMax = Math.max(...cityHeatData.map((r) => Number(r[2] || 0)), 1);
+  const cityHeatOption = {
+    animationDuration: 500,
+    grid: { left: 136, right: 26, top: 18, bottom: 38 },
+    tooltip: {
+      trigger: "item",
+      backgroundColor: colors.navy,
+      borderWidth: 0,
+      textStyle: { color: "#fff" },
+      formatter: (params: any) => {
+        const row = cities.slice(0, 12).reverse()[params.data[1]];
+        return `<strong>${row?.city || "Cidade"}</strong><br/>Volume: ${formatNumber(row?.shipments, false)}<br/>SLA: ${pct(row?.sla)}<br/>Atrasados: ${formatNumber(row?.delayed, false)}`;
+      },
+    },
+    xAxis: {
+      type: "category",
+      data: ["Volume de entregas"],
+      axisLabel: chartText,
+      axisLine: { show: false },
+      axisTick: { show: false },
+    },
+    yAxis: {
+      type: "category",
+      data: cities.slice(0, 12).reverse().map((r) => String(r.city || "").split(" / ")[0]),
+      axisLabel: { ...chartText, width: 118, overflow: "truncate" },
+      axisLine: { show: false },
+      axisTick: { show: false },
+    },
+    visualMap: {
+      min: 0,
+      max: cityMax,
+      calculable: false,
+      orient: "horizontal",
+      left: "center",
+      bottom: 0,
+      itemWidth: 110,
+      itemHeight: 8,
+      text: ["Maior volume", "Menor"],
+      textStyle: chartText,
+      inRange: { color: ["#edf4ff", "#8db2e1", colors.blue] },
+    },
+    series: [{
+      type: "heatmap",
+      data: cityHeatData,
+      label: { show: true, color: colors.navy, formatter: (params: any) => formatNumber(params.value[2], false) },
+      itemStyle: { borderColor: "#fff", borderWidth: 3, borderRadius: 6 },
+      emphasis: { itemStyle: { shadowBlur: 10, shadowColor: "rgba(7,30,66,.25)" } },
+    }],
+  };
   const slaOption = {
     animationDuration: 600,
     grid: { left: 42, right: 16, top: 28, bottom: 34 },
@@ -968,6 +1040,33 @@ function Deliveries({ data }: { data: any }) {
         </Panel>
         <Panel eyebrow="AGING" title="Faixas de atraso">
           <ReactECharts option={latenessOption} style={{ height: 330 }} />
+        </Panel>
+      </section>
+      <section className="two-grid delivery-heatmaps">
+        <Panel eyebrow="MAPA DE CALOR" title="Volume por estado">
+          <div className="state-heatmap" role="img" aria-label="Mapa de calor do volume de entregas por estado">
+            {states.map((state) => {
+              const uf = String(state.uf || "").toUpperCase();
+              const position = stateLayout[uf];
+              if (!position) return null;
+              const volume = Number(state.shipments || 0);
+              return (
+                <div
+                  className="state-heat-cell"
+                  key={uf}
+                  style={{ gridColumn: position.column, gridRow: position.row, background: heatColor(volume, stateMax) }}
+                  title={`${uf}: ${formatNumber(volume, false)} entregas · SLA ${pct(state.sla)} · ${formatNumber(state.delayed, false)} atrasados`}
+                >
+                  <strong>{uf}</strong>
+                  <small>{formatNumber(volume)}</small>
+                </div>
+              );
+            })}
+          </div>
+          <div className="heatmap-legend"><span>Menor volume</span><i /><span>Maior volume</span></div>
+        </Panel>
+        <Panel eyebrow="DETALHE URBANO" title="Calor por cidade">
+          <ReactECharts option={cityHeatOption} style={{ height: 330 }} />
         </Panel>
       </section>
       <section className="two-grid tables">
