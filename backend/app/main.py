@@ -1,16 +1,21 @@
 from __future__ import annotations
 
+import hashlib
+import hmac
+import time
 from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .analytics import Filters, deliveries, filter_options, finance, fleet, operations, overview
 from .chat_service import ask
+from .config import settings
 from .db import query_one
 from .sftp_service import latest_transfer_costs, source_status
 
@@ -23,6 +28,82 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+SESSION_COOKIE = "ativa_session"
+PUBLIC_API_PATHS = {"/api/health", "/api/auth/login", "/api/auth/logout", "/api/auth/me"}
+
+
+def _session_token(username: str, expires_at: int) -> str:
+    payload = f"{username}|{expires_at}"
+    secret = settings.dashboard_auth_secret or settings.dashboard_password
+    signature = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
+    return f"{payload}|{signature}"
+
+
+def _session_user(token: str | None) -> str | None:
+    if not token or not settings.dashboard_password:
+        return None
+    try:
+        username, expires_raw, signature = token.rsplit("|", 2)
+        expires_at = int(expires_raw)
+    except (ValueError, TypeError):
+        return None
+    if expires_at < int(time.time()):
+        return None
+    expected = _session_token(username, expires_at).rsplit("|", 1)[1]
+    if not hmac.compare_digest(signature, expected):
+        return None
+    return username if hmac.compare_digest(username, settings.dashboard_user) else None
+
+
+@app.middleware("http")
+async def protect_api(request: Request, call_next: Any) -> Response:
+    if request.url.path.startswith("/api/") and request.url.path not in PUBLIC_API_PATHS:
+        if not _session_user(request.cookies.get(SESSION_COOKIE)):
+            return JSONResponse({"detail": "Sessão não autenticada."}, status_code=401)
+    return await call_next(request)
+
+
+class LoginRequest(BaseModel):
+    username: str = Field(min_length=1, max_length=80)
+    password: str = Field(min_length=1, max_length=200)
+
+
+@app.post("/api/auth/login")
+def login(payload: LoginRequest, response: Response) -> dict[str, Any]:
+    if not settings.dashboard_password:
+        raise HTTPException(503, "O acesso ao dashboard ainda não foi configurado.")
+    valid_user = hmac.compare_digest(payload.username, settings.dashboard_user)
+    valid_password = hmac.compare_digest(payload.password, settings.dashboard_password)
+    if not (valid_user and valid_password):
+        raise HTTPException(401, "Usuário ou senha inválidos.")
+    max_age = max(settings.dashboard_session_hours, 1) * 3600
+    expires_at = int(time.time()) + max_age
+    response.set_cookie(
+        SESSION_COOKIE,
+        _session_token(settings.dashboard_user, expires_at),
+        max_age=max_age,
+        httponly=True,
+        secure=settings.dashboard_cookie_secure,
+        samesite="lax",
+        path="/",
+    )
+    response.headers["Cache-Control"] = "no-store"
+    return {"authenticated": True, "username": settings.dashboard_user}
+
+
+@app.post("/api/auth/logout")
+def logout(response: Response) -> dict[str, bool]:
+    response.delete_cookie(SESSION_COOKIE, path="/")
+    response.headers["Cache-Control"] = "no-store"
+    return {"authenticated": False}
+
+
+@app.get("/api/auth/me")
+def auth_me(request: Request, response: Response) -> dict[str, Any]:
+    username = _session_user(request.cookies.get(SESSION_COOKIE))
+    response.headers["Cache-Control"] = "no-store"
+    return {"authenticated": bool(username), "username": username}
 
 
 def make_filters(

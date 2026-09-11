@@ -18,6 +18,9 @@ import {
   Filter,
   Gauge,
   LayoutDashboard,
+  LockKeyhole,
+  LogIn,
+  LogOut,
   Menu,
   MessageSquareText,
   PackageCheck,
@@ -28,6 +31,7 @@ import {
   ShieldCheck,
   Sparkles,
   Truck,
+  UserRound,
   Users,
   Weight,
   X,
@@ -1742,8 +1746,93 @@ function Chat({ filters }: { filters: Filters }) {
   );
 }
 
+function LoginScreen({ onAuthenticated }: { onAuthenticated: (username: string) => void }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!username.trim() || !password || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.trim(), password }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.detail || "Não foi possível entrar.");
+      onAuthenticated(json.username);
+    } catch (loginError: any) {
+      setError(loginError.message || "Não foi possível entrar.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <main className="login-page">
+      <section className="login-shell">
+        <div className="login-brand-panel">
+          <img src="/logo-ativa.png" alt="Ativa Logística" />
+          <div>
+            <span>CENTRAL DE INTELIGÊNCIA</span>
+            <h1>Decisões mais rápidas para toda a operação.</h1>
+            <p>Acesse indicadores, análises, previsões e respostas sobre os dados da Ativa.</p>
+          </div>
+          <small><ShieldCheck size={16} /> Ambiente protegido</small>
+        </div>
+        <form className="login-card" onSubmit={submit}>
+          <div className="login-icon"><LockKeyhole size={22} /></div>
+          <span>ACESSO RESTRITO</span>
+          <h2>Entre no dashboard</h2>
+          <p>Use suas credenciais para continuar.</p>
+          <label htmlFor="login-user">Usuário</label>
+          <div className="login-field">
+            <UserRound size={18} />
+            <input
+              id="login-user"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              autoComplete="username"
+              placeholder="Digite seu usuário"
+              autoFocus
+            />
+          </div>
+          <label htmlFor="login-password">Senha</label>
+          <div className="login-field">
+            <LockKeyhole size={18} />
+            <input
+              id="login-password"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete="current-password"
+              placeholder="Digite sua senha"
+            />
+          </div>
+          {error && <div className="login-error">{error}</div>}
+          <button className="login-submit" disabled={busy || !username.trim() || !password}>
+            <span>{busy ? "Entrando…" : "Entrar"}</span>
+            <LogIn size={18} />
+          </button>
+          <small className="login-footnote">Ativa Logística · Uso interno</small>
+        </form>
+      </section>
+    </main>
+  );
+}
+
 export default function App() {
-  const [tab, setTab] = useState<Tab>("overview"),
+  const [auth, setAuth] = useState<{ loading: boolean; username: string | null }>({
+      loading: true,
+      username: null,
+    }),
+    [tab, setTab] = useState<Tab>("overview"),
     [menuOpen, setMenuOpen] = useState(false),
     [options, setOptions] = useState<any>(null),
     [filters, setFilters] = useState<Filters>({
@@ -1764,6 +1853,13 @@ export default function App() {
       [filters],
     );
   useEffect(() => {
+    fetch("/api/auth/me", { credentials: "same-origin" })
+      .then((response) => response.json())
+      .then((json) => setAuth({ loading: false, username: json.authenticated ? json.username : null }))
+      .catch(() => setAuth({ loading: false, username: null }));
+  }, []);
+  useEffect(() => {
+    if (!auth.username) return;
     fetch("/api/filters")
       .then((r) => r.json())
       .then((j) => {
@@ -1775,9 +1871,9 @@ export default function App() {
         }));
       })
       .catch(() => setError("A API ainda não está disponível."));
-  }, []);
+  }, [auth.username]);
   useEffect(() => {
-    if (tab === "chat" || !filters.start) return;
+    if (!auth.username || tab === "chat" || !filters.start) return;
     setLoading(true);
     setError("");
     const endpoint = tab === "insights" || tab === "predictive" ? "overview" : tab;
@@ -1791,9 +1887,26 @@ export default function App() {
       .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [tab, filters, refresh]);
+  }, [auth.username, tab, filters, refresh]);
   function change(key: keyof Filters, value: string) {
     setFilters((f) => ({ ...f, [key]: value }));
+  }
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).catch(() => null);
+    setAuth({ loading: false, username: null });
+    setData(null);
+    setOptions(null);
+  }
+  if (auth.loading) {
+    return (
+      <div className="auth-loading">
+        <img src="/logo-ativa.png" alt="Ativa Logística" />
+        <span>Carregando ambiente seguro…</span>
+      </div>
+    );
+  }
+  if (!auth.username) {
+    return <LoginScreen onAuthenticated={(username) => setAuth({ loading: false, username })} />;
   }
   return (
     <div className="shell">
@@ -1910,7 +2023,9 @@ export default function App() {
                 <span>Pergunte aos dados</span>
               </button>
             )}
-            <button className="avatar">AL</button>
+            <button className="avatar auth-logout" onClick={logout} title="Sair do dashboard" aria-label="Sair do dashboard">
+              <LogOut size={15} />
+            </button>
           </div>
         </header>
         <div className="page-content">

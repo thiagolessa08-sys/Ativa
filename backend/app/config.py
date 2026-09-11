@@ -29,6 +29,11 @@ class Settings:
     anthropic_api_key: str = os.getenv("ANTHROPIC_API_KEY", "")
     anthropic_model: str = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-5")
     query_timeout_ms: int = int(os.getenv("QUERY_TIMEOUT_MS", "20000"))
+    dashboard_user: str = os.getenv("DASHBOARD_USER", "ativa")
+    dashboard_password: str = os.getenv("DASHBOARD_PASSWORD", "")
+    dashboard_auth_secret: str = os.getenv("DASHBOARD_AUTH_SECRET", "")
+    dashboard_session_hours: int = int(os.getenv("DASHBOARD_SESSION_HOURS", "12"))
+    dashboard_cookie_secure: bool = os.getenv("DASHBOARD_COOKIE_SECURE", "false").lower() == "true"
 
 
 settings = Settings()
