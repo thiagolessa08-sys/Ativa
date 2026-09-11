@@ -1525,7 +1525,7 @@ header {
   flex: 1 1 710px;
   min-width: 0;
   max-width: 1020px;
-  left: 128px;
+  left: 0;
   margin-left: 0;
   animation: truckDrive 0.9s cubic-bezier(0.16, 0.7, 0.2, 1) both;
 }
