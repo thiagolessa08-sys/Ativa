@@ -634,6 +634,20 @@ function Overview({ data, filters }: { data: any; filters: Filters }) {
       },
     ],
   };
+  const branchSlaOption = horizontalBar(data?.branches || [], "branch", "sla", colors.yellow, pct);
+  branchSlaOption.xAxis = {
+    ...branchSlaOption.xAxis,
+    axisLabel: { ...branchSlaOption.xAxis.axisLabel, color: "#dbe8f8" },
+    splitLine: { lineStyle: { color: "rgba(255,255,255,0.16)" } },
+  };
+  branchSlaOption.yAxis = {
+    ...branchSlaOption.yAxis,
+    axisLabel: { ...branchSlaOption.yAxis.axisLabel, color: "#ffffff" },
+  };
+  branchSlaOption.series = branchSlaOption.series.map((series: any) => ({
+    ...series,
+    label: { ...series.label, color: "#ffffff" },
+  }));
   const totalAttention = (data?.occurrences || []).reduce(
     (sum: number, row: Row) => sum + number(row.occurrence_count),
     0,
@@ -701,9 +715,9 @@ function Overview({ data, filters }: { data: any; filters: Filters }) {
             }}
           />
         </Panel>
-        <Panel eyebrow="REDE ATIVA" title="SLA por filial">
+        <Panel eyebrow="REDE ATIVA" title="SLA por filial" className="branch-sla-panel">
           <ReactECharts
-            option={horizontalBar(data?.branches || [], "branch", "sla", "#17468f", pct)}
+            option={branchSlaOption}
             style={{ height: 235 }}
           />
         </Panel>

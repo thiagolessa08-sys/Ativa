@@ -1473,6 +1473,17 @@ header {
   font-weight: 700;
   letter-spacing: 0;
 }
+.branch-sla-panel {
+  background: linear-gradient(145deg, #17468f 0%, #123a78 100%);
+  border-color: #17468f;
+  color: #fff;
+}
+.branch-sla-panel .panel-title span {
+  color: #c8daf2;
+}
+.branch-sla-panel .panel-title h2 {
+  color: #fff;
+}
 .reference-overview {
   animation: refFade 0.45s ease-out both;
 }
