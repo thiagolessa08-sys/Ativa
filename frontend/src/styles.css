@@ -1283,7 +1283,7 @@ body {
 }
 .sidebar nav button.active {
   color: #17468f;
-  background: #eef2fa;
+  background: #f0f0f0;
 }
 .sidebar nav button.active i {
   display: none;
