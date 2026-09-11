@@ -1564,10 +1564,7 @@ export default function App() {
     <div className="shell">
       <aside className={`sidebar ${menuOpen ? "open" : ""}`}>
         <div className="brand">
-          <span className="brand-mark">A</span>
-          <span>
-            ATIVA<small>COMMAND CENTER</small>
-          </span>
+          <img className="sidebar-logo" src="/logo-ativa.png" alt="Ativa Logística" />
           <button className="close-menu" onClick={() => setMenuOpen(false)}>
             <X />
           </button>
@@ -1609,8 +1606,7 @@ export default function App() {
           </button>
           <div className="page-heading">
             <div className="top-brand" aria-label="Ativa Logística">
-              <span>A</span>
-              <b>ATIVA<small>LOGÍSTICA</small></b>
+              <img src="/logo-ativa.png" alt="Ativa Logística" />
             </div>
             <div>
             <span className="eyebrow">{current.eyebrow}</span>

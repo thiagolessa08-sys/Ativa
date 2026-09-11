@@ -1234,6 +1234,19 @@ body {
   color: #fec52e;
   font-size: 19px;
 }
+.sidebar-logo {
+  display: block;
+  width: 40px;
+  height: auto;
+  flex: 0 0 auto;
+  object-fit: contain;
+  object-position: left center;
+  transition: width 0.18s ease;
+}
+.sidebar:hover .sidebar-logo,
+.sidebar.open .sidebar-logo {
+  width: 150px;
+}
 .sidebar .brand > span:last-of-type,
 .sidebar nav button span,
 .sidebar .side-status div {
@@ -1309,6 +1322,11 @@ header {
   align-items: center;
   gap: 9px;
   color: #17468f;
+}
+.top-brand img {
+  display: block;
+  width: 132px;
+  height: auto;
 }
 .top-brand > span {
   width: 34px;
@@ -1657,7 +1675,7 @@ header {
   z-index: 1;
 }
 @media (max-width: 1160px) {
-  .top-brand b { display: none; }
+  .top-brand img { width: 104px; }
   .assistant {
     width: 34px;
     padding: 8px;
@@ -1685,7 +1703,7 @@ header {
   .reference-bottom { grid-template-columns: 1fr; }
 }
 @media (max-width: 650px) {
-  .top-brand b { display: none; }
+  .top-brand img { width: 82px; }
   .filters { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 10px; }
   .date-range { min-width: 250px; }
   .select-filter { min-width: 125px; }
