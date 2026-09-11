@@ -907,6 +907,11 @@ function Deliveries({ data }: { data: any }) {
       .catch(() => setMapReady(false));
     return () => { active = false; };
   }, []);
+  const heatColor = (value: number, max: number) => {
+    const ratio = Math.max(0, Math.min(value / Math.max(max, 1), 1));
+    const start = [231, 240, 252], end = [23, 70, 143];
+    return `rgb(${start.map((v, i) => Math.round(v + (end[i] - v) * ratio)).join(",")})`;
+  };
   const stateMax = Math.max(...states.map((r) => Number(r.shipments || 0)), 1);
   const stateMapOption = {
     animationDuration: 600,
@@ -920,28 +925,21 @@ function Deliveries({ data }: { data: any }) {
         return `<strong>${params.name}</strong><br/>Volume: ${formatNumber(row?.shipments, false)}<br/>SLA: ${pct(row?.sla)}<br/>Atrasados: ${formatNumber(row?.delayed, false)}`;
       },
     },
-    visualMap: {
-      min: 0,
-      max: stateMax,
-      calculable: false,
-      orient: "horizontal",
-      left: "center",
-      bottom: 0,
-      itemWidth: 110,
-      itemHeight: 8,
-      text: ["Maior volume", "Menor"],
-      textStyle: chartText,
-      inRange: { color: ["#e7f0fc", "#8db2e1", colors.blue] },
-    },
     series: [{
       type: "map",
       map: "brazil",
       nameProperty: "sigla",
       roam: false,
       selectedMode: false,
-      data: states.map((row) => ({ name: String(row.uf).toUpperCase(), value: Number(row.shipments || 0) })),
+      layoutCenter: ["50%", "45%"],
+      layoutSize: "128%",
+      zoom: 1.12,
+      data: states.map((row) => {
+        const value = Number(row.shipments || 0);
+        return { name: String(row.uf).toUpperCase(), value, itemStyle: { areaColor: heatColor(value, stateMax) } };
+      }),
       label: { show: true, color: "#486788", fontSize: 9, formatter: (params: any) => params.name },
-      itemStyle: { areaColor: "#edf3fb", borderColor: "#fff", borderWidth: 1.2 },
+      itemStyle: { areaColor: "#e7f0fc", borderColor: "#fff", borderWidth: 1.2 },
       emphasis: { label: { color: "#fff", fontWeight: 700 }, itemStyle: { borderColor: "#fff", borderWidth: 1.5 } },
     }],
   };
@@ -959,7 +957,7 @@ function Deliveries({ data }: { data: any }) {
       borderWidth: 0,
       textStyle: { color: "#fff" },
       formatter: (params: any) => {
-        const row = cities.slice(0, 12).reverse()[params.data[1]];
+        const row = cities.slice(0, 12).reverse()[params.value?.[1]];
         return `<strong>${row?.city || "Cidade"}</strong><br/>Volume: ${formatNumber(row?.shipments, false)}<br/>SLA: ${pct(row?.sla)}<br/>Atrasados: ${formatNumber(row?.delayed, false)}`;
       },
     },
@@ -977,22 +975,9 @@ function Deliveries({ data }: { data: any }) {
       axisLine: { show: false },
       axisTick: { show: false },
     },
-    visualMap: {
-      min: 0,
-      max: cityMax,
-      calculable: false,
-      orient: "horizontal",
-      left: "center",
-      bottom: 0,
-      itemWidth: 110,
-      itemHeight: 8,
-      text: ["Maior volume", "Menor"],
-      textStyle: chartText,
-      inRange: { color: ["#edf4ff", "#8db2e1", colors.blue] },
-    },
     series: [{
       type: "heatmap",
-      data: cityHeatData,
+      data: cityHeatData.map((value) => ({ value, itemStyle: { color: heatColor(Number(value[2]), cityMax) } })),
       label: { show: true, color: colors.navy, formatter: (params: any) => formatNumber(params.value[2], false) },
       itemStyle: { borderColor: "#fff", borderWidth: 3, borderRadius: 6 },
       emphasis: { itemStyle: { shadowBlur: 10, shadowColor: "rgba(7,30,66,.25)" } },
@@ -1083,11 +1068,13 @@ function Deliveries({ data }: { data: any }) {
       <section className="two-grid delivery-heatmaps">
         <Panel eyebrow="MAPA DE CALOR" title="Volume por estado">
           <div className="state-map-wrap" role="img" aria-label="Mapa de calor do volume de entregas por estado">
-            {mapReady ? <ReactECharts option={stateMapOption} style={{ height: 350 }} /> : <div className="state-map-loading">Carregando mapa do Brasil…</div>}
+            {mapReady ? <ReactECharts option={stateMapOption} style={{ height: 405 }} /> : <div className="state-map-loading">Carregando mapa do Brasil…</div>}
           </div>
+          <div className="map-legend"><span>Menor volume</span><i /><span>Maior volume</span></div>
         </Panel>
         <Panel eyebrow="DETALHE URBANO" title="Calor por cidade">
           <ReactECharts option={cityHeatOption} style={{ height: 330 }} />
+          <div className="map-legend"><span>Menor volume</span><i /><span>Maior volume</span></div>
         </Panel>
       </section>
       <section className="two-grid tables">

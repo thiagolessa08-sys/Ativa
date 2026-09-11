@@ -1980,6 +1980,21 @@ header {
   color: #7d8da4;
   font-size: 12px;
 }
+.map-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 2px 0 4px;
+  color: #8491a4;
+  font-size: 10px;
+}
+.map-legend i {
+  width: 110px;
+  height: 8px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #e7f0fc, #8db2e1, #17468f);
+}
 .state-heatmap {
   display: grid;
   grid-template-columns: repeat(11, minmax(25px, 1fr));
