@@ -1687,27 +1687,27 @@ header {
   .reference-bottom > .panel:first-child,
   .reference-bottom > .panel:last-child { grid-column: auto; }
 }
-.operations-kpis .kpi-card:first-child {
+.brand-kpis .kpi-card:first-child {
   border: 1px solid rgba(254, 197, 46, 0.72);
   background: linear-gradient(145deg, #fff8d8, #fffdf2);
 }
-.operations-kpis .kpi-card:first-child > span {
+.brand-kpis .kpi-card:first-child > span {
   color: #7b671d;
 }
-.operations-kpis .kpi-card:first-child > strong {
+.brand-kpis .kpi-card:first-child > strong {
   color: #173e70;
 }
-.operations-kpis .kpi-card:not(:first-child) {
+.brand-kpis .kpi-card:not(:first-child) {
   border: 1px solid rgba(23, 70, 143, 0.3);
   background: linear-gradient(145deg, #edf4ff, #f9fbff);
 }
-.operations-kpis .kpi-card:not(:first-child) > span {
+.brand-kpis .kpi-card:not(:first-child) > span {
   color: #4f6b8e;
 }
-.operations-kpis .kpi-card:not(:first-child) > strong {
+.brand-kpis .kpi-card:not(:first-child) > strong {
   color: #17468f;
 }
-.operations-kpis .kpi-card:not(:first-child) .kpi-icon {
+.brand-kpis .kpi-card:not(:first-child) .kpi-icon {
   color: #17468f;
   background: #dce9f8;
 }

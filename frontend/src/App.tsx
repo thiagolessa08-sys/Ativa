@@ -777,7 +777,7 @@ function Operations({ data }: { data: any }) {
   };
   return (
     <div className="operations-page">
-      <section className="kpis operations-kpis">
+      <section className="kpis operations-kpis brand-kpis">
         <KpiCard
           icon={Box}
           tone="yellow"
@@ -1051,11 +1051,11 @@ function Finance({ data }: { data: any }) {
     ],
   };
   return (
-    <>
-      <section className="kpis">
+    <div className="finance-page">
+      <section className="kpis finance-kpis brand-kpis">
         <KpiCard
           icon={CircleDollarSign}
-          tone="blue"
+          tone="yellow"
           label="Receita de frete"
           value={formatCurrency(revenue)}
           note="No período selecionado"
@@ -1135,7 +1135,7 @@ function Finance({ data }: { data: any }) {
           ]}
         />
       </Panel>
-    </>
+    </div>
   );
 }
 
@@ -1144,11 +1144,11 @@ function Fleet({ data }: { data: any }) {
     transfer = data?.transfer_costs || {},
     summary = transfer.summary || {};
   return (
-    <>
-      <section className="kpis">
+    <div className="fleet-page">
+      <section className="kpis fleet-kpis brand-kpis">
         <KpiCard
           icon={Route}
-          tone="blue"
+          tone="yellow"
           label="Manifestos"
           value={formatNumber(k.manifests, false)}
           note="Viagens no período"
@@ -1261,7 +1261,7 @@ function Fleet({ data }: { data: any }) {
           />
         </Panel>
       </section>
-    </>
+    </div>
   );
 }
 
