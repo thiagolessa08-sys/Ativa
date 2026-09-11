@@ -40,6 +40,8 @@ type Tab =
   | "deliveries"
   | "finance"
   | "fleet"
+  | "insights"
+  | "predictive"
   | "sources"
   | "chat";
 type Filters = {
@@ -92,6 +94,20 @@ const tabs: {
     icon: Truck,
     eyebrow: "TRANSFERÊNCIAS",
     description: "Viagens, veículos, motoristas e custos operacionais.",
+  },
+  {
+    id: "insights",
+    label: "Insights IA",
+    icon: Sparkles,
+    eyebrow: "LEITURA INTELIGENTE",
+    description: "Padrões, riscos e oportunidades identificados nos dados.",
+  },
+  {
+    id: "predictive",
+    label: "Visão preditiva",
+    icon: Activity,
+    eyebrow: "PLANEJAMENTO PREDITIVO",
+    description: "Tendências projetadas para antecipar decisões da operação.",
   },
   {
     id: "sources",
@@ -1286,6 +1302,164 @@ function Fleet({ data }: { data: any }) {
   );
 }
 
+function Insights({ data }: { data: any }) {
+  const trend: Row[] = (data?.trend || []).filter((row: Row) => row.date);
+  const branches: Row[] = data?.branches || [];
+  const k = data?.kpis || {};
+  const slaValues = trend.map((row) =>
+    Number(row.delivered || 0) ? (Number(row.on_time || 0) / Number(row.delivered)) * 100 : 0,
+  );
+  const currentSla = Number(k.sla || 0);
+  const avgSla = slaValues.length
+    ? slaValues.reduce((sum, value) => sum + value, 0) / slaValues.length
+    : currentSla;
+  const riskBranches = branches
+    .filter((row) => Number(row.sla || 0) < 95)
+    .sort((a, b) => Number(a.sla || 0) - Number(b.sla || 0));
+  const trendChange = slaValues.length > 1 ? slaValues[slaValues.length - 1] - slaValues[0] : 0;
+  const insightRows = [
+    {
+      insight: "Nível de serviço",
+      status: currentSla < 95 ? "Atenção" : "Estável",
+      evidence: `${pct(currentSla)} no período`,
+      recommendation: currentSla < 95 ? "Priorizar as filiais abaixo da meta" : "Manter o ritmo atual",
+    },
+    {
+      insight: "Filiais abaixo da meta",
+      status: riskBranches.length ? "Atenção" : "Estável",
+      evidence: `${riskBranches.length} de ${branches.length} filiais`,
+      recommendation: riskBranches.length ? "Revisar capacidade e prazos" : "Acompanhar semanalmente",
+    },
+    {
+      insight: "Direção da tendência",
+      status: trendChange >= 0 ? "Melhora" : "Queda",
+      evidence: `${trendChange >= 0 ? "+" : ""}${trendChange.toFixed(1).replace(".", ",")} p.p.`,
+      recommendation: trendChange >= 0 ? "Replicar as práticas das melhores filiais" : "Investigar os principais atrasos",
+    },
+  ];
+  const trendOption = {
+    animationDuration: 600,
+    grid: { left: 44, right: 20, top: 24, bottom: 32 },
+    tooltip,
+    xAxis: { type: "category", data: trend.slice(-31).map((row) => formatDate(row.date).slice(0, 5)), axisLabel: chartText, axisLine: { show: false }, axisTick: { show: false } },
+    yAxis: { type: "value", min: 70, max: 100, axisLabel: { ...chartText, formatter: (v: number) => `${v}%` }, splitLine: { lineStyle: { color: colors.grid } } },
+    series: [{ type: "line", smooth: true, symbol: "none", data: slaValues.slice(-31), lineStyle: { width: 3, color: colors.blue }, areaStyle: { color: "rgba(23,70,143,.10)" }, markLine: { silent: true, symbol: "none", lineStyle: { color: colors.yellow, type: "dashed" }, data: [{ yAxis: 95, label: { formatter: "Meta 95%", color: "#9a7600" } }] } }],
+  };
+  return (
+    <div className="insights-page">
+      <section className="kpis brand-kpis insights-kpis">
+        <KpiCard icon={Sparkles} tone="yellow" label="SLA atual" value={pct(currentSla)} note="Leitura do período" />
+        <KpiCard icon={Route} tone="blue" label="Filiais em atenção" value={formatNumber(riskBranches.length, false)} note="Abaixo de 95%" />
+        <KpiCard icon={Clock3} tone="blue" label="Atrasos em aberto" value={formatNumber(k.delayed, false)} note="Pendências identificadas" />
+        <KpiCard icon={Activity} tone="blue" label="Média diária de SLA" value={pct(avgSla)} note="Com base no histórico" />
+      </section>
+      <section className="two-grid">
+        <Panel eyebrow="SINAL IDENTIFICADO" title="Evolução do SLA">
+          <ReactECharts option={trendOption} style={{ height: 300 }} />
+        </Panel>
+        <Panel eyebrow="PONTOS DE ATENÇÃO" title="Filiais abaixo da meta">
+          <ReactECharts option={horizontalBar(riskBranches.length ? riskBranches : branches, "branch", "sla", colors.orange, pct)} style={{ height: 300 }} />
+        </Panel>
+      </section>
+      <Panel eyebrow="RECOMENDAÇÕES" title="Insights identificados pela IA" className="table-panel">
+        <DataTable
+          rows={insightRows}
+          columns={[
+            { key: "insight", label: "Insight" },
+            { key: "status", label: "Status" },
+            { key: "evidence", label: "Evidência" },
+            { key: "recommendation", label: "Recomendação" },
+          ]}
+        />
+      </Panel>
+    </div>
+  );
+}
+
+function Predictive({ data }: { data: any }) {
+  const rows: Row[] = (data?.trend || []).filter((row: Row) => row.date).slice(-21);
+  const actualSla = rows.map((row) =>
+    Number(row.delivered || 0) ? (Number(row.on_time || 0) / Number(row.delivered)) * 100 : 0,
+  );
+  const actualShipments = rows.map((row) => Number(row.shipments || 0));
+  const lastSeven = (values: number[]) => values.slice(-7);
+  const average = (values: number[]) => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+  const recentSla = lastSeven(actualSla);
+  const baselineSla = average(recentSla);
+  const slope = recentSla.length > 1 ? (recentSla[recentSla.length - 1] - recentSla[0]) / (recentSla.length - 1) : 0;
+  const forecastSla = Array.from({ length: 7 }, (_, index) => Math.max(0, Math.min(100, baselineSla + slope * (index + 1))));
+  const baselineShipments = average(lastSeven(actualShipments));
+  const forecastShipments = Array.from({ length: 7 }, (_, index) => Math.max(0, Math.round(baselineShipments * (1 + (slope / 100) * (index + 1)))));
+  const lastDate = rows.length ? String(rows[rows.length - 1].date).slice(0, 10) : "2026-09-10";
+  const addDays = (value: string, days: number) => {
+    const date = new Date(`${value}T00:00:00Z`);
+    date.setUTCDate(date.getUTCDate() + days);
+    return date.toISOString().slice(0, 10);
+  };
+  const forecastDates = forecastSla.map((_, index) => addDays(lastDate, index + 1));
+  const labels = [...rows.map((row) => formatDate(row.date).slice(0, 5)), ...forecastDates.map((date) => formatDate(date).slice(0, 5))];
+  const forecastSeries = actualSla.length
+    ? [...Array(actualSla.length - 1).fill(null), actualSla[actualSla.length - 1], ...forecastSla]
+    : forecastSla;
+  const forecastOption = {
+    animationDuration: 600,
+    grid: { left: 44, right: 20, top: 24, bottom: 32 },
+    tooltip,
+    xAxis: { type: "category", data: labels, axisLabel: chartText, axisLine: { show: false }, axisTick: { show: false } },
+    yAxis: { type: "value", min: 70, max: 100, axisLabel: { ...chartText, formatter: (v: number) => `${v}%` }, splitLine: { lineStyle: { color: colors.grid } } },
+    series: [
+      { name: "Realizado", type: "line", smooth: true, symbol: "none", data: [...actualSla, ...Array(7).fill(null)], lineStyle: { width: 3, color: colors.blue } },
+      { name: "Projeção", type: "line", smooth: true, symbol: "circle", symbolSize: 6, data: forecastSeries, lineStyle: { width: 3, type: "dashed", color: colors.yellow }, itemStyle: { color: colors.yellow } },
+    ],
+  };
+  const volumeOption = {
+    animationDuration: 600,
+    grid: { left: 48, right: 20, top: 24, bottom: 32 },
+    tooltip,
+    xAxis: { type: "category", data: labels, axisLabel: chartText, axisLine: { show: false }, axisTick: { show: false } },
+    yAxis: { type: "value", axisLabel: { ...chartText, formatter: (v: number) => formatNumber(v) }, splitLine: { lineStyle: { color: colors.grid } } },
+    series: [
+      { name: "Realizado", type: "bar", data: [...actualShipments, ...Array(7).fill(null)], barMaxWidth: 18, itemStyle: { color: colors.blue, borderRadius: [4, 4, 0, 0] } },
+      { name: "Projeção", type: "bar", data: [...Array(actualShipments.length).fill(null), ...forecastShipments], barMaxWidth: 18, itemStyle: { color: "#8fb2da", borderRadius: [4, 4, 0, 0] } },
+    ],
+  };
+  const scenarioRows = forecastDates.map((date, index) => ({
+    date: formatDate(date),
+    sla: pct(forecastSla[index]),
+    shipments: formatNumber(forecastShipments[index], false),
+    signal: forecastSla[index] < 95 ? "Atenção" : "Estável",
+  }));
+  return (
+    <div className="predictive-page">
+      <section className="kpis brand-kpis predictive-kpis">
+        <KpiCard icon={Activity} tone="yellow" label="SLA projetado" value={pct(forecastSla[6] || baselineSla)} note="Próximos 7 dias" />
+        <KpiCard icon={ArrowUpRight} tone="blue" label="Tendência projetada" value={`${slope >= 0 ? "+" : ""}${slope.toFixed(1).replace(".", ",")} p.p.`} note="Variação média diária" />
+        <KpiCard icon={Box} tone="blue" label="Volume estimado" value={formatNumber(forecastShipments.reduce((sum, value) => sum + value, 0), false)} note="Próximos 7 dias" />
+        <KpiCard icon={CheckCircle2} tone="blue" label="Dias dentro da meta" value={formatNumber(forecastSla.filter((value) => value >= 95).length, false)} note="Projeção acima de 95%" />
+      </section>
+      <section className="two-grid">
+        <Panel eyebrow="PROJEÇÃO DE SLA" title="Realizado x próximos 7 dias">
+          <ReactECharts option={forecastOption} style={{ height: 300 }} />
+        </Panel>
+        <Panel eyebrow="DEMANDA ESPERADA" title="Volume projetado">
+          <ReactECharts option={volumeOption} style={{ height: 300 }} />
+        </Panel>
+      </section>
+      <Panel eyebrow="CENÁRIO BASE" title="Próximos dias projetados" className="table-panel">
+        <DataTable
+          rows={scenarioRows}
+          columns={[
+            { key: "date", label: "Data" },
+            { key: "sla", label: "SLA projetado", align: "right" },
+            { key: "shipments", label: "Embarques estimados", align: "right" },
+            { key: "signal", label: "Sinal" },
+          ]}
+        />
+      </Panel>
+    </div>
+  );
+}
+
 function Sources({ data }: { data: any }) {
   const db = data?.database || {},
     transfer = data?.transfer || {};
@@ -1603,8 +1777,9 @@ export default function App() {
     if (tab === "chat" || !filters.start) return;
     setLoading(true);
     setError("");
-    const suffix = tab === "sources" ? "" : `?${queryString(filters)}`;
-    fetch(`/api/${tab}${suffix}`)
+    const endpoint = tab === "insights" || tab === "predictive" ? "overview" : tab;
+    const suffix = endpoint === "sources" ? "" : `?${queryString(filters)}`;
+    fetch(`/api/${endpoint}${suffix}`)
       .then(async (r) => {
         const j = await r.json();
         if (!r.ok) throw new Error(j.detail || "Falha ao carregar dados");
@@ -1759,6 +1934,10 @@ export default function App() {
             <Finance data={data} />
           ) : tab === "fleet" ? (
             <Fleet data={data} />
+          ) : tab === "insights" ? (
+            <Insights data={data} />
+          ) : tab === "predictive" ? (
+            <Predictive data={data} />
           ) : (
             <Sources data={data} />
           )}
