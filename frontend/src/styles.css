@@ -1973,6 +1973,9 @@ header {
   place-items: center;
   margin-top: 8px;
 }
+.state-map-wrap > .echarts-for-react {
+  width: 100% !important;
+}
 .state-map-loading {
   color: #7d8da4;
   font-size: 12px;
