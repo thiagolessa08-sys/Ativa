@@ -1,0 +1,1 @@
+"""Ativa Command Center backend."""
