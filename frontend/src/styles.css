@@ -1474,8 +1474,8 @@ header {
   letter-spacing: 0;
 }
 .branch-sla-panel {
-  background: linear-gradient(145deg, #e9eef8 0%, #dce8f8 100%);
-  border: 2px solid #17468f;
+  border: 1px solid rgba(23, 70, 143, 0.3);
+  background: linear-gradient(145deg, #edf4ff, #f9fbff);
   color: #17468f;
 }
 .branch-sla-panel .panel-title span {
