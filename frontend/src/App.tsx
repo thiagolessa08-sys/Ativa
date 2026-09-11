@@ -1359,14 +1359,7 @@ function chatChart(rows: Row[], type: string) {
 }
 
 function Chat({ filters }: { filters: Filters }) {
-  const [messages, setMessages] = useState<any[]>([
-      {
-        role: "assistant",
-        answer:
-          "Olá! Posso consultar a operação da Ativa para você. Pergunte sobre entregas, receita, filiais, clientes, rotas, ocorrências ou frota.",
-        title: "Assistente de dados",
-      },
-    ]),
+  const [messages, setMessages] = useState<any[]>([]),
     [input, setInput] = useState(""),
     [busy, setBusy] = useState(false);
   const suggestions = [
@@ -1407,7 +1400,34 @@ function Chat({ filters }: { filters: Filters }) {
   return (
     <div className="chat-layout">
       <section className="chat-window">
+        <div className="chat-window-top">
+          <div>
+            <span>ASSISTENTE DE DADOS</span>
+            <h2>Converse com a operação da Ativa</h2>
+          </div>
+          <div className="chat-status"><i /> Online</div>
+        </div>
         <div className="chat-scroll">
+          {messages.length === 0 && (
+            <div className="chat-empty-state">
+              <div className="chat-empty-mark"><Bot size={25} /></div>
+              <span className="chat-empty-kicker">CONSULTA EM LINGUAGEM NATURAL</span>
+              <h3>O que você quer descobrir?</h3>
+              <p>
+                Pergunte sobre entregas, receita, filiais, clientes, rotas,
+                ocorrências ou frota. Eu transformo sua pergunta em uma consulta
+                e mostro o resultado.
+              </p>
+              <div className="chat-prompt-grid">
+                {suggestions.map((q) => (
+                  <button onClick={() => submit(q)} key={q}>
+                    <span>{q}</span>
+                    <ArrowUpRight size={15} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {messages.map((m, i) => (
             <div className={`message ${m.role}`} key={i}>
               {m.role === "assistant" && (
