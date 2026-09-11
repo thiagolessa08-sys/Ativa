@@ -1404,7 +1404,10 @@ function Predictive({ data }: { data: any }) {
   const forecastOption = {
     animationDuration: 600,
     grid: { left: 44, right: 20, top: 24, bottom: 32 },
-    tooltip,
+    tooltip: {
+      ...tooltip,
+      valueFormatter: (value: number) => `${Number(value || 0).toFixed(1).replace(".", ",")}%`,
+    },
     xAxis: { type: "category", data: labels, axisLabel: chartText, axisLine: { show: false }, axisTick: { show: false } },
     yAxis: { type: "value", min: 70, max: 100, axisLabel: { ...chartText, formatter: (v: number) => `${v}%` }, splitLine: { lineStyle: { color: colors.grid } } },
     series: [
