@@ -893,8 +893,9 @@ function Deliveries({ data }: { data: any }) {
   const stateLayout: Record<string, { column: number; row: number }> = {
     RR: { column: 4, row: 1 }, AP: { column: 7, row: 1 }, AM: { column: 2, row: 2 },
     PA: { column: 5, row: 2 }, MA: { column: 8, row: 2 }, CE: { column: 10, row: 2 },
-    AC: { column: 1, row: 4 }, RO: { column: 2, row: 4 }, PI: { column: 8, row: 4 },
-    PE: { column: 10, row: 4 }, AL: { column: 11, row: 4 }, MT: { column: 4, row: 5 },
+    RN: { column: 11, row: 3 }, PB: { column: 11, row: 4 }, AC: { column: 1, row: 4 },
+    RO: { column: 2, row: 4 }, PI: { column: 8, row: 4 }, PE: { column: 10, row: 4 },
+    AL: { column: 11, row: 5 }, MT: { column: 4, row: 5 },
     TO: { column: 6, row: 5 }, BA: { column: 9, row: 5 }, SE: { column: 11, row: 5 },
     MS: { column: 4, row: 7 }, GO: { column: 6, row: 6 }, DF: { column: 7, row: 6 },
     MG: { column: 8, row: 7 }, ES: { column: 11, row: 7 }, SP: { column: 7, row: 8 },
