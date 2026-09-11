@@ -932,8 +932,8 @@ function Deliveries({ data }: { data: any }) {
       roam: false,
       selectedMode: false,
       layoutCenter: ["50%", "45%"],
-      layoutSize: "128%",
-      zoom: 1.12,
+      layoutSize: "110%",
+      zoom: 1,
       data: states.map((row) => {
         const value = Number(row.shipments || 0);
         return { name: String(row.uf).toUpperCase(), value, itemStyle: { areaColor: heatColor(value, stateMax) } };
@@ -1066,14 +1066,14 @@ function Deliveries({ data }: { data: any }) {
         </Panel>
       </section>
       <section className="two-grid delivery-heatmaps">
-        <Panel eyebrow="MAPA DE CALOR" title="Volume por estado">
-          <div className="state-map-wrap" role="img" aria-label="Mapa de calor do volume de entregas por estado">
-            {mapReady ? <ReactECharts option={stateMapOption} style={{ height: 405 }} /> : <div className="state-map-loading">Carregando mapa do Brasil…</div>}
-          </div>
+        <Panel eyebrow="DETALHE URBANO" title="Calor por cidade">
+          <ReactECharts option={cityHeatOption} style={{ height: 390 }} />
           <div className="map-legend"><span>Menor volume</span><i /><span>Maior volume</span></div>
         </Panel>
-        <Panel eyebrow="DETALHE URBANO" title="Calor por cidade">
-          <ReactECharts option={cityHeatOption} style={{ height: 330 }} />
+        <Panel eyebrow="MAPA DE CALOR" title="Volume por estado">
+          <div className="state-map-wrap" role="img" aria-label="Mapa de calor do volume de entregas por estado">
+            {mapReady ? <ReactECharts option={stateMapOption} style={{ height: 390 }} /> : <div className="state-map-loading">Carregando mapa do Brasil…</div>}
+          </div>
           <div className="map-legend"><span>Menor volume</span><i /><span>Maior volume</span></div>
         </Panel>
       </section>
