@@ -591,7 +591,19 @@ function Overview({ data, filters }: { data: any; filters: Filters }) {
         type: "pie",
         radius: ["47%", "72%"],
         center: ["50%", "43%"],
-        label: { show: false },
+        label: {
+          show: true,
+          formatter: "{b}\n{d}%",
+          color: "#4b5f7a",
+          fontSize: 10,
+          lineHeight: 14,
+        },
+        labelLine: {
+          show: true,
+          length: 10,
+          length2: 8,
+          lineStyle: { color: "#9aabc0" },
+        },
         itemStyle: { borderColor: "#fff", borderWidth: 3 },
         color: ["#17468f", "#fec52e", "#6f8fbe", "#aebcd0", "#dce2ea"],
         data: (data?.states || []).slice(0, 5).map((r: Row) => ({
