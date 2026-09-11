@@ -18,7 +18,7 @@ BLOCKED_FUNCTIONS = {"pg_sleep", "dblink", "lo_import", "lo_export", "pg_read_fi
 BLOCKED_COLUMNS = {"cgc_pag", "cgc_emit", "cgc_dest", "c_chave_fis", "endereco_volume", "instrucao_entrega"}
 
 SCHEMA = """
-PostgreSQL 9.6, tabelas somente leitura:
+PostgreSQL, tabelas somente leitura:
 - ctrc: cada linha é um conhecimento/CT-e. Datas: data_ref, data_prev_ent, data_entrega. Valores: vlr_frete, vlr_merc, qtde_vol, peso_calculo. Origem/destino: sigla_fil_emit, sigla_fil_atual, sigla_fil_dest, uf_origem, uf_dest, cidade_origem, cidade_dest. Clientes: nome_cli_pag, nome_cli_emit, nome_cli_dest. Segmento: segmento_pag. Última ocorrência: ult_ocor, data_ult_ocor.
 - ocorrencia: codigo, descricao, tp_entrega. Relacione ocorrencia.codigo = ctrc.ult_ocor.
 - manifesto: viagens de transferência; data_inclusao, data_prev_chegada, data_chegada, placa_cavalo, marca, modelo, nome_motorista, cidade_origem, cidade_dest, uf_dest, sigla_fil_dest.
@@ -100,7 +100,58 @@ def fallback_plan(message: str, filters: dict[str, Any] | None = None) -> dict[s
     return {"title": "Resumo operacional", "sql": sql, "params": params, "chart_type": "number"}
 
 
-def llm_plan(message: str, filters: dict[str, Any] | None = None) -> dict[str, Any] | None:
+def _system_prompt() -> str:
+    return (
+        "Você é analista de BI da Ativa Logística. Gere uma única consulta PostgreSQL SELECT para responder à pergunta. "
+        "Use somente as tabelas e colunas fornecidas, nunca exponha CNPJ, chaves fiscais, endereços ou dados pessoais. "
+        "Prefira agregações, aplique LIMIT 200 em resultados detalhados e escreva aliases em português sem espaços. "
+        "Responda somente com JSON válido, sem markdown, usando exatamente os campos title, sql, chart_type e explanation. "
+        "chart_type deve ser number, bar, line ou table. A data atual é "
+        + date.today().isoformat()
+        + ".\n"
+        + SCHEMA
+    )
+
+
+def _json_object(text: str) -> dict[str, Any]:
+    clean = text.strip()
+    if clean.startswith("```"):
+        clean = re.sub(r"^```(?:json)?\s*|\s*```$", "", clean, flags=re.IGNORECASE)
+    try:
+        return json.loads(clean)
+    except json.JSONDecodeError:
+        match = re.search(r"\{.*\}", clean, flags=re.DOTALL)
+        if not match:
+            raise ValueError("O modelo não retornou um plano SQL válido.")
+        return json.loads(match.group())
+
+
+def anthropic_plan(message: str, filters: dict[str, Any] | None = None) -> dict[str, Any] | None:
+    if not settings.anthropic_api_key:
+        return None
+    from anthropic import Anthropic
+
+    client = Anthropic(api_key=settings.anthropic_api_key)
+    response = client.messages.create(
+        model=settings.anthropic_model,
+        max_tokens=1400,
+        system=_system_prompt(),
+        messages=[{
+            "role": "user",
+            "content": (
+                "<filtros_ativos>"
+                + json.dumps(filters or {}, ensure_ascii=False)
+                + "</filtros_ativos>\n<pergunta>"
+                + message
+                + "</pergunta>"
+            ),
+        }],
+    )
+    text = "".join(block.text for block in response.content if getattr(block, "type", "") == "text")
+    return _json_object(text)
+
+
+def openai_plan(message: str, filters: dict[str, Any] | None = None) -> dict[str, Any] | None:
     if not settings.openai_api_key:
         return None
     from openai import OpenAI
@@ -111,12 +162,7 @@ def llm_plan(message: str, filters: dict[str, Any] | None = None) -> dict[str, A
     filter_context = json.dumps(filters or {}, ensure_ascii=False)
     response = client.responses.create(
         model=settings.openai_model,
-        instructions=(
-            "Você é analista de BI da Ativa Logística. Gere uma única consulta PostgreSQL SELECT para responder à pergunta. "
-            "Use somente as tabelas e colunas fornecidas, nunca exponha CNPJ, chaves fiscais, endereços ou dados pessoais. "
-            "Prefira agregações, aplique LIMIT 200 em resultados detalhados e escreva aliases em português sem espaços. "
-            "A data atual é " + date.today().isoformat() + ".\n" + SCHEMA
-        ),
+        instructions=_system_prompt(),
         input=f"Filtros ativos: {filter_context}\nPergunta: {message}",
         reasoning={"effort": "low"},
         text={"format": {
@@ -138,6 +184,10 @@ def llm_plan(message: str, filters: dict[str, Any] | None = None) -> dict[str, A
         store=False,
     )
     return json.loads(response.output_text)
+
+
+def llm_plan(message: str, filters: dict[str, Any] | None = None) -> dict[str, Any] | None:
+    return anthropic_plan(message, filters) or openai_plan(message, filters)
 
 
 def validate_sql(sql: str) -> str:
@@ -174,7 +224,13 @@ def _format_value(value: Any) -> str:
 
 
 def ask(message: str, filters: dict[str, Any] | None = None) -> dict[str, Any]:
-    provider = "OpenAI" if settings.openai_api_key else "analisador local"
+    provider = (
+        "Claude (Anthropic)"
+        if settings.anthropic_api_key
+        else "OpenAI"
+        if settings.openai_api_key
+        else "analisador local"
+    )
     plan = llm_plan(message, filters) or fallback_plan(message, filters)
     sql = validate_sql(plan["sql"])
     data = query(sql, plan.get("params"))

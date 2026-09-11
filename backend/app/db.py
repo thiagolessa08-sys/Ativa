@@ -18,17 +18,23 @@ _pool: ThreadedConnectionPool | None = None
 def pool() -> ThreadedConnectionPool:
     global _pool
     if _pool is None:
-        _pool = ThreadedConnectionPool(
-            1,
-            8,
-            host=settings.bi_host,
-            port=settings.bi_port,
-            dbname=settings.bi_database,
-            user=settings.bi_user,
-            password=settings.bi_password,
-            connect_timeout=10,
-            application_name="ativa_command_center",
-        )
+        common = {
+            "connect_timeout": 10,
+            "application_name": "ativa_command_center",
+        }
+        if settings.database_url:
+            _pool = ThreadedConnectionPool(1, 8, settings.database_url, **common)
+        else:
+            _pool = ThreadedConnectionPool(
+                1,
+                8,
+                host=settings.bi_host,
+                port=settings.bi_port,
+                dbname=settings.bi_database,
+                user=settings.bi_user,
+                password=settings.bi_password,
+                **common,
+            )
     return _pool
 
 

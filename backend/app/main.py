@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .analytics import Filters, deliveries, filter_options, finance, fleet, operations, overview
@@ -115,3 +117,8 @@ def chat_endpoint(payload: ChatRequest) -> dict[str, Any]:
         raise HTTPException(422, str(exc)) from exc
     except Exception as exc:
         raise HTTPException(500, f"Não foi possível responder: {type(exc).__name__}") from exc
+
+
+FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+if FRONTEND_DIST.exists():
+    app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")

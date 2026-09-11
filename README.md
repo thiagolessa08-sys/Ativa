@@ -44,14 +44,29 @@ A documentação interativa da API fica em
 
 ## Chat em linguagem natural
 
-Sem `OPENAI_API_KEY`, o analisador local responde às perguntas operacionais mais
-comuns sobre SLA, atrasos, receita, clientes, filiais, rotas e frota. Para
-perguntas livres, preencha `OPENAI_API_KEY` e, se necessário, altere
-`OPENAI_MODEL`.
+Quando `ANTHROPIC_API_KEY` está configurada, o chat usa Claude para criar o plano
+SQL. O modelo padrão é `claude-sonnet-5` e pode ser alterado por
+`ANTHROPIC_MODEL`. Sem essa chave, a aplicação usa OpenAI quando configurada ou o
+analisador local para perguntas operacionais comuns.
 
 Toda consulta gerada passa por validação de sintaxe, lista de tabelas permitidas,
 bloqueio de campos sensíveis, limite de linhas, timeout e transação de banco em
 modo somente leitura. A interface permite inspecionar o SQL executado.
+
+## Railway
+
+O `Dockerfile` compila o frontend e inicia a API FastAPI, que também entrega os
+arquivos estáticos. No serviço da aplicação, configure:
+
+```text
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+ANTHROPIC_API_KEY=<chave criada no Railway>
+ANTHROPIC_MODEL=claude-sonnet-5
+```
+
+O health check usado pelo Railway é `/api/health`. `DATABASE_URL` tem prioridade
+sobre as variáveis `BI_*`, permitindo que a aplicação use a rede privada entre os
+serviços.
 
 ## Testes rápidos
 
