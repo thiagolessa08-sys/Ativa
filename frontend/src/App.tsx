@@ -356,6 +356,7 @@ function horizontalBar(
 
 function Overview({ data, filters }: { data: any; filters: Filters }) {
   const [selected, setSelected] = useState("sla");
+  const [deliveryMonth, setDeliveryMonth] = useState<string | null>(null);
   const k = data?.kpis || {};
   const previous = data?.previous || {};
   const trend: Row[] = data?.trend || [];
@@ -450,6 +451,55 @@ function Overview({ data, filters }: { data: any; filters: Filters }) {
   ];
   const active = metrics.find((metric) => metric.key === selected) || metrics[0];
   const periodLabel = `${formatDate(filters.start)} a ${formatDate(filters.end)}`;
+  const monthlyDeliveries = useMemo(() => {
+    const buckets = new Map<
+      string,
+      { key: string; label: string; onTime: number; late: number }
+    >();
+    trend.forEach((row) => {
+      const date = String(row.date || "");
+      const key = date.slice(0, 7);
+      if (!key) return;
+      const current = buckets.get(key) || {
+        key,
+        label: new Intl.DateTimeFormat("pt-BR", {
+          month: "short",
+          year: "2-digit",
+        })
+          .format(new Date(`${key}-01T12:00:00`))
+          .replace(" de ", "/"),
+        onTime: 0,
+        late: 0,
+      };
+      current.onTime += number(row.on_time);
+      current.late += Math.max(0, number(row.delivered) - number(row.on_time));
+      buckets.set(key, current);
+    });
+    return [...buckets.values()].sort((a, b) => a.key.localeCompare(b.key));
+  }, [trend]);
+  useEffect(() => {
+    if (
+      deliveryMonth &&
+      !monthlyDeliveries.some((bucket) => bucket.key === deliveryMonth)
+    ) {
+      setDeliveryMonth(null);
+    }
+  }, [deliveryMonth, monthlyDeliveries]);
+  const deliveryRows = deliveryMonth
+    ? trend
+        .filter((row) => String(row.date || "").startsWith(deliveryMonth))
+        .map((row) => ({
+          key: String(row.date),
+          label: formatDate(row.date).slice(0, 5),
+          onTime: number(row.on_time),
+          late: Math.max(0, number(row.delivered) - number(row.on_time)),
+        }))
+    : monthlyDeliveries;
+  const deliveryMonthLabel = deliveryMonth
+    ? new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(
+        new Date(`${deliveryMonth}-01T12:00:00`),
+      )
+    : "";
   const selectedTrend = {
     animationDuration: 700,
     grid: { left: 12, right: 12, top: 18, bottom: 23, containLabel: true },
@@ -498,7 +548,7 @@ function Overview({ data, filters }: { data: any; filters: Filters }) {
     },
     xAxis: {
       type: "category",
-      data: trend.map((r) => formatDate(r.date).slice(0, 5)),
+      data: deliveryRows.map((row) => row.label),
       axisLine: { show: false },
       axisTick: { show: false },
       axisLabel: { ...chartText, fontSize: 10, hideOverlap: true },
@@ -515,17 +565,19 @@ function Overview({ data, filters }: { data: any; filters: Filters }) {
         name: "No prazo",
         type: "bar",
         stack: "deliveries",
-        data: trend.map((r) => r.on_time),
-        barMaxWidth: 16,
+        data: deliveryRows.map((row) => row.onTime),
+        barMaxWidth: deliveryMonth ? 16 : 38,
         itemStyle: { color: "#17468f", borderRadius: [0, 0, 3, 3] },
+        emphasis: { itemStyle: { color: "#0f376f" } },
       },
       {
         name: "Fora do prazo",
         type: "bar",
         stack: "deliveries",
-        data: trend.map((r) => Math.max(0, number(r.delivered) - number(r.on_time))),
-        barMaxWidth: 16,
+        data: deliveryRows.map((row) => row.late),
+        barMaxWidth: deliveryMonth ? 16 : 38,
         itemStyle: { color: "#fec52e", borderRadius: [3, 3, 0, 0] },
+        emphasis: { itemStyle: { color: "#e6ad10" } },
       },
     ],
   };
@@ -588,8 +640,32 @@ function Overview({ data, filters }: { data: any; filters: Filters }) {
       </section>
 
       <section className="reference-grid">
-        <Panel eyebrow="NÍVEL DE SERVIÇO" title="Entregas por dia" className="daily-panel">
-          <ReactECharts option={dailyOption} style={{ height: 235 }} />
+        <Panel
+          eyebrow="NÍVEL DE SERVIÇO"
+          title={deliveryMonth ? `Entregas por dia · ${deliveryMonthLabel}` : "Entregas por mês"}
+          className="daily-panel"
+          action={
+            deliveryMonth ? (
+              <button className="drill-back" onClick={() => setDeliveryMonth(null)}>
+                ← Voltar aos meses
+              </button>
+            ) : (
+              <span className="drill-hint">Clique em um mês para ver os dias</span>
+            )
+          }
+        >
+          <ReactECharts
+            option={dailyOption}
+            style={{ height: 235, cursor: deliveryMonth ? "default" : "pointer" }}
+            onEvents={{
+              click: (params: { dataIndex: number }) => {
+                if (!deliveryMonth) {
+                  const month = monthlyDeliveries[params.dataIndex];
+                  if (month) setDeliveryMonth(month.key);
+                }
+              },
+            }}
+          />
         </Panel>
         <Panel eyebrow="REDE ATIVA" title="SLA por filial">
           <ReactECharts

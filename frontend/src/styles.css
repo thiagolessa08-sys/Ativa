@@ -1613,6 +1613,29 @@ header {
 .attention-list.compact {
   min-height: 0;
 }
+.drill-hint {
+  align-self: center;
+  color: #7b8390 !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+.drill-back {
+  align-self: center;
+  padding: 6px 9px;
+  border: 1px solid #d8dce3;
+  border-radius: 7px;
+  background: #fff;
+  color: #17468f;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.drill-back:hover {
+  border-color: #17468f;
+  background: #eef2fa;
+}
 .attention-list.compact .attention-row {
   padding: 10px 2px;
 }
