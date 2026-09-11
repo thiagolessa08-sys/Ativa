@@ -1886,42 +1886,44 @@ function LoginScreen({ onAuthenticated }: { onAuthenticated: (username: string) 
           </div>
           <small><ShieldCheck size={16} /> Ambiente protegido</small>
         </div>
-        <form className="login-card" onSubmit={submit}>
-          <div className="login-icon"><LockKeyhole size={22} /></div>
-          <span>ACESSO RESTRITO</span>
-          <h2>Entre no dashboard</h2>
-          <p>Use suas credenciais para continuar.</p>
-          <label htmlFor="login-user">Usuário</label>
-          <div className="login-field">
-            <UserRound size={18} />
-            <input
-              id="login-user"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              autoComplete="username"
-              placeholder="Digite seu usuário"
-              autoFocus
-            />
-          </div>
-          <label htmlFor="login-password">Senha</label>
-          <div className="login-field">
-            <LockKeyhole size={18} />
-            <input
-              id="login-password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="current-password"
-              placeholder="Digite sua senha"
-            />
-          </div>
-          {error && <div className="login-error">{error}</div>}
-          <button className="login-submit" disabled={busy || !username.trim() || !password}>
-            <span>{busy ? "Entrando…" : "Entrar"}</span>
-            <LogIn size={18} />
-          </button>
-          <small className="login-footnote">Ativa Logística · Uso interno</small>
-        </form>
+        <div className="login-form-panel">
+          <form className="login-card" onSubmit={submit}>
+            <div className="login-icon"><LockKeyhole size={22} /></div>
+            <span>ACESSO RESTRITO</span>
+            <h2>Entre no dashboard</h2>
+            <p>Use suas credenciais para continuar.</p>
+            <label htmlFor="login-user">Usuário</label>
+            <div className="login-field">
+              <UserRound size={18} />
+              <input
+                id="login-user"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                autoComplete="username"
+                placeholder="Digite seu usuário"
+                autoFocus
+              />
+            </div>
+            <label htmlFor="login-password">Senha</label>
+            <div className="login-field">
+              <LockKeyhole size={18} />
+              <input
+                id="login-password"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
+                placeholder="Digite sua senha"
+              />
+            </div>
+            {error && <div className="login-error">{error}</div>}
+            <button className="login-submit" disabled={busy || !username.trim() || !password}>
+              <span>{busy ? "Entrando…" : "Entrar"}</span>
+              <LogIn size={18} />
+            </button>
+            <small className="login-footnote">Ativa Logística · Uso interno</small>
+          </form>
+        </div>
       </section>
     </main>
   );
