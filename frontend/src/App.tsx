@@ -1564,7 +1564,6 @@ export default function App() {
     <div className="shell">
       <aside className={`sidebar ${menuOpen ? "open" : ""}`}>
         <div className="brand">
-          <img className="sidebar-logo" src="/logo-ativa.png" alt="Ativa Logística" />
           <button className="close-menu" onClick={() => setMenuOpen(false)}>
             <X />
           </button>

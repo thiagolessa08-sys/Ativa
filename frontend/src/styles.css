@@ -1220,8 +1220,8 @@ body {
   box-shadow: 0 12px 32px rgba(16, 20, 24, 0.14);
 }
 .sidebar .brand {
-  height: 42px;
-  padding: 0 0 14px;
+  height: 20px;
+  padding: 0;
   gap: 12px;
   white-space: nowrap;
 }
@@ -1233,19 +1233,6 @@ body {
   background: #17468f;
   color: #fec52e;
   font-size: 19px;
-}
-.sidebar-logo {
-  display: block;
-  width: 40px;
-  height: auto;
-  flex: 0 0 auto;
-  object-fit: contain;
-  object-position: left center;
-  transition: width 0.18s ease;
-}
-.sidebar:hover .sidebar-logo,
-.sidebar.open .sidebar-logo {
-  width: 150px;
 }
 .sidebar .brand > span:last-of-type,
 .sidebar nav button span,
@@ -1626,8 +1613,14 @@ header {
 }
 .reference-bottom {
   display: grid;
-  grid-template-columns: 1fr 1.35fr;
+  grid-template-columns: minmax(0, 1.55fr) minmax(250px, 1fr) minmax(250px, 1fr);
   gap: 12px;
+}
+.reference-bottom > .panel:first-child {
+  grid-column: 1;
+}
+.reference-bottom > .panel:last-child {
+  grid-column: 2 / 4;
 }
 .attention-list.compact {
   min-height: 0;
@@ -1686,10 +1679,14 @@ header {
   .trend-side { max-width: 34%; }
   .reference-grid { grid-template-columns: 1.4fr 1fr; }
   .reference-grid .map-mix-panel { grid-column: 1 / -1; }
+  .reference-bottom { grid-template-columns: 1.4fr 1fr; }
+  .reference-bottom > .panel:first-child,
+  .reference-bottom > .panel:last-child { grid-column: auto; }
 }
 @media (max-width: 860px) {
   .sidebar { transform: translateX(-120%); }
   .sidebar.open { width: 208px; transform: translateX(0); }
+  .sidebar.open .brand { height: 34px; }
   .sidebar.open .brand > span:last-of-type,
   .sidebar.open nav button span,
   .sidebar.open .side-status div { opacity: 1; }
