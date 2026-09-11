@@ -1143,6 +1143,11 @@ function Fleet({ data }: { data: any }) {
   const k = data?.kpis || {},
     transfer = data?.transfer_costs || {},
     summary = transfer.summary || {};
+  const trips = Number(summary.trips || 0);
+  const cost = Number(summary.cost || 0);
+  const freight = Number(summary.freight || 0);
+  const tons = Number(summary.tons || 0);
+  const routeCount = (transfer.routes || []).length;
   return (
     <div className="fleet-page">
       <section className="kpis fleet-kpis brand-kpis">
@@ -1212,6 +1217,22 @@ function Fleet({ data }: { data: any }) {
             <div>
               <small>Peso calculado</small>
               <strong>{formatNumber(summary.tons)} t</strong>
+            </div>
+            <div>
+              <small>Rotas monitoradas</small>
+              <strong>{formatNumber(routeCount, false)}</strong>
+            </div>
+            <div>
+              <small>Custo por viagem</small>
+              <strong>{formatCurrency(trips ? cost / trips : 0, false)}</strong>
+            </div>
+            <div>
+              <small>Frete por viagem</small>
+              <strong>{formatCurrency(trips ? freight / trips : 0, false)}</strong>
+            </div>
+            <div>
+              <small>Custo por tonelada</small>
+              <strong>{formatCurrency(tons ? cost / tons : 0, false)}</strong>
             </div>
           </div>
           <div className="compact-routes">

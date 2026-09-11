@@ -590,7 +590,8 @@ td.right {
 }
 .transfer-summary > div {
   padding: 12px;
-  background: #f7f9fc;
+  border: 1px solid rgba(23, 70, 143, 0.24);
+  background: linear-gradient(145deg, #edf4ff, #f9fbff);
   border-radius: 10px;
 }
 .transfer-summary small,
@@ -598,10 +599,11 @@ td.right {
   display: block;
 }
 .transfer-summary small {
-  color: #7f8ca0;
+  color: #4f6b8e;
   font-size: 11px;
 }
 .transfer-summary strong {
+  color: #17468f;
   font-size: 17px;
   margin-top: 5px;
 }
