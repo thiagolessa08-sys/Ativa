@@ -1473,7 +1473,7 @@ header {
 .trend-side {
   flex: 1 1 330px;
   min-width: 245px;
-  max-width: 34%;
+  max-width: 42%;
   padding: 4px 6px;
 }
 .trend-heading {
