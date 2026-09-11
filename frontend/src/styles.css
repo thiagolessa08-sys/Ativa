@@ -1697,6 +1697,20 @@ header {
 .operations-kpis .kpi-card:first-child > strong {
   color: #173e70;
 }
+.operations-kpis .kpi-card:not(:first-child) {
+  border: 1px solid rgba(23, 70, 143, 0.3);
+  background: linear-gradient(145deg, #edf4ff, #f9fbff);
+}
+.operations-kpis .kpi-card:not(:first-child) > span {
+  color: #4f6b8e;
+}
+.operations-kpis .kpi-card:not(:first-child) > strong {
+  color: #17468f;
+}
+.operations-kpis .kpi-card:not(:first-child) .kpi-icon {
+  color: #17468f;
+  background: #dce9f8;
+}
 @media (max-width: 860px) {
   .sidebar { transform: translateX(-120%); }
   .sidebar.open { width: 208px; transform: translateX(0); }
