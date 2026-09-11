@@ -931,6 +931,7 @@ function Deliveries({ data }: { data: any }) {
       nameProperty: "sigla",
       roam: false,
       selectedMode: false,
+      aspectScale: 1.2,
       layoutCenter: ["50%", "45%"],
       layoutSize: "110%",
       zoom: 1,
