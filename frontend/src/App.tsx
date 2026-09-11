@@ -1051,7 +1051,7 @@ function Finance({ data }: { data: any }) {
         name: "Receita",
         type: "bar",
         data: monthly.map((r) => r.revenue),
-        barWidth: 24,
+        barWidth: 48,
         itemStyle: { color: colors.blue, borderRadius: [5, 5, 0, 0] },
       },
       {
