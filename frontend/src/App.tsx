@@ -1537,8 +1537,8 @@ export default function App() {
     [menuOpen, setMenuOpen] = useState(false),
     [options, setOptions] = useState<any>(null),
     [filters, setFilters] = useState<Filters>({
-      start: "",
-      end: "",
+      start: "2026-06-01",
+      end: "2026-09-10",
       branch: "",
       uf: "",
       segment: "",
