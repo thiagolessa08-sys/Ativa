@@ -531,6 +531,8 @@ header p {
 .table-wrap {
   overflow: auto;
   max-height: 440px;
+  border: 1px solid #dfe7f1;
+  border-radius: 10px;
 }
 table {
   border-collapse: collapse;
@@ -541,9 +543,9 @@ th {
   text-transform: uppercase;
   letter-spacing: 0.055em;
   font-size: 10px;
-  color: #8490a3;
+  color: #fff;
   font-weight: 800;
-  background: #f7f9fc;
+  background: #17468f;
   position: sticky;
   top: 0;
   z-index: 1;
@@ -555,8 +557,17 @@ td {
   border-bottom: 1px solid #edf1f6;
   white-space: nowrap;
 }
+thead th:first-child {
+  border-top-left-radius: 9px;
+}
+thead th:last-child {
+  border-top-right-radius: 9px;
+}
 td {
   color: #33445e;
+}
+tbody tr:nth-child(even) {
+  background: #f8fbff;
 }
 tbody tr:hover {
   background: #f8faff;
