@@ -1461,14 +1461,14 @@ header {
 .truck-stage {
   display: flex;
   align-items: center;
-  gap: 16px;
-  min-height: 272px;
+  gap: 4px;
+  min-height: 292px;
   padding: 4px 4px 14px;
 }
 .trend-side {
-  flex: 1 1 285px;
+  flex: 1 1 310px;
   min-width: 245px;
-  max-width: 31%;
+  max-width: 34%;
   padding: 4px 6px;
 }
 .trend-heading {
@@ -1504,7 +1504,7 @@ header {
   display: none;
 }
 .truck-trend-chart {
-  height: 125px !important;
+  height: 150px !important;
   margin-top: 5px;
 }
 .truck-help {
@@ -1520,7 +1520,7 @@ header {
   flex: 1 1 710px;
   min-width: 0;
   max-width: 1020px;
-  margin-left: auto;
+  margin-left: -8px;
   animation: truckDrive 0.9s cubic-bezier(0.16, 0.7, 0.2, 1) both;
 }
 @keyframes truckDrive {
