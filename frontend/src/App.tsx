@@ -111,8 +111,9 @@ const tabs: {
 
 const colors = {
   navy: "#071e42",
-  blue: "#1474e4",
+  blue: "#17468f",
   cyan: "#4fb4ee",
+  yellow: "#fec52e",
   orange: "#f28b20",
   green: "#18a97c",
   red: "#e45f52",
@@ -758,16 +759,16 @@ function Operations({ data }: { data: any }) {
         type: "bar",
         data: hourly.map((r: Row) => r.shipments),
         barWidth: "58%",
-        itemStyle: { color: colors.cyan, borderRadius: [5, 5, 0, 0] },
+        itemStyle: { color: colors.blue, borderRadius: [5, 5, 0, 0] },
       },
     ],
   };
   return (
-    <>
-      <section className="kpis">
+    <div className="operations-page">
+      <section className="kpis operations-kpis">
         <KpiCard
           icon={Box}
-          tone="blue"
+          tone="yellow"
           label="Embarques"
           value={formatNumber(t.shipments, false)}
           note="No período selecionado"
@@ -848,7 +849,7 @@ function Operations({ data }: { data: any }) {
           ]}
         />
       </Panel>
-    </>
+    </div>
   );
 }
 

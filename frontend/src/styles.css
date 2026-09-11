@@ -6,7 +6,7 @@
   background: #f4f7fb;
   font-synthesis: none;
   --navy: #071e42;
-  --blue: #1474e4;
+  --blue: #17468f;
   --orange: #f28b20;
   --line: #e3e9f2;
   --muted: #728097;
@@ -370,8 +370,12 @@ header p {
   border-radius: 10px;
 }
 .kpi-icon.blue {
-  color: #1877e5;
-  background: #e9f2fd;
+  color: #17468f;
+  background: #e9eef8;
+}
+.kpi-icon.yellow {
+  color: #8c6900;
+  background: #fff2b8;
 }
 .kpi-icon.green {
   color: #159c71;
@@ -1682,6 +1686,16 @@ header {
   .reference-bottom { grid-template-columns: 1.4fr 1fr; }
   .reference-bottom > .panel:first-child,
   .reference-bottom > .panel:last-child { grid-column: auto; }
+}
+.operations-kpis .kpi-card:first-child {
+  border: 1px solid rgba(254, 197, 46, 0.72);
+  background: linear-gradient(145deg, #fff8d8, #fffdf2);
+}
+.operations-kpis .kpi-card:first-child > span {
+  color: #7b671d;
+}
+.operations-kpis .kpi-card:first-child > strong {
+  color: #173e70;
 }
 @media (max-width: 860px) {
   .sidebar { transform: translateX(-120%); }
