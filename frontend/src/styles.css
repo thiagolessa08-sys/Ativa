@@ -1474,15 +1474,15 @@ header {
   letter-spacing: 0;
 }
 .branch-sla-panel {
-  background: linear-gradient(145deg, #17468f 0%, #123a78 100%);
-  border-color: #17468f;
-  color: #fff;
+  background: linear-gradient(145deg, #e9eef8 0%, #dce8f8 100%);
+  border-color: #c7d8ee;
+  color: #17468f;
 }
 .branch-sla-panel .panel-title span {
-  color: #c8daf2;
+  color: #5f7594;
 }
 .branch-sla-panel .panel-title h2 {
-  color: #fff;
+  color: #17468f;
 }
 .reference-overview {
   animation: refFade 0.45s ease-out both;
