@@ -1542,6 +1542,61 @@ export default function App() {
             <p>{current.description}</p>
             </div>
           </div>
+          {tab !== "chat" && tab !== "sources" && (
+            <section className="filters header-filters">
+              <div className="date-range">
+                <label>
+                  <CalendarDays size={13} /> Período
+                </label>
+                <div>
+                  <input
+                    type="date"
+                    value={filters.start}
+                    min={options?.min_date}
+                    max={filters.end || options?.max_date}
+                    onChange={(e) => change("start", e.target.value)}
+                  />
+                  <span>até</span>
+                  <input
+                    type="date"
+                    value={filters.end}
+                    min={filters.start || options?.min_date}
+                    max={options?.max_date}
+                    onChange={(e) => change("end", e.target.value)}
+                  />
+                </div>
+              </div>
+              <SelectFilter
+                label="Filial"
+                value={filters.branch}
+                options={options?.branches || []}
+                placeholder="Todas as filiais"
+                onChange={(v) => change("branch", v)}
+              />
+              <SelectFilter
+                label="Destino"
+                value={filters.uf}
+                options={options?.states || []}
+                placeholder="Todos os estados"
+                onChange={(v) => change("uf", v)}
+              />
+              <SelectFilter
+                label="Segmento"
+                value={filters.segment}
+                options={options?.segments || []}
+                placeholder="Todos os segmentos"
+                onChange={(v) => change("segment", v)}
+              />
+              <button
+                className="refresh"
+                onClick={() => setRefresh((r) => r + 1)}
+                title="Atualizar dados"
+              >
+                <RefreshCw size={17} />
+                {activeFilters > 0 && <b>{activeFilters}</b>}
+              </button>
+            </section>
+          )}
           <div className="header-actions">
             {tab !== "chat" && (
               <button className="assistant" onClick={() => setTab("chat")}>
@@ -1552,60 +1607,6 @@ export default function App() {
             <button className="avatar">AL</button>
           </div>
         </header>
-        {tab !== "chat" && tab !== "sources" && (
-          <section className="filters">
-            <div className="date-range">
-              <label>
-                <CalendarDays size={13} /> Período
-              </label>
-              <div>
-                <input
-                  type="date"
-                  value={filters.start}
-                  min={options?.min_date}
-                  max={filters.end || options?.max_date}
-                  onChange={(e) => change("start", e.target.value)}
-                />
-                <span>até</span>
-                <input
-                  type="date"
-                  value={filters.end}
-                  min={filters.start || options?.min_date}
-                  max={options?.max_date}
-                  onChange={(e) => change("end", e.target.value)}
-                />
-              </div>
-            </div>
-            <SelectFilter
-              label="Filial"
-              value={filters.branch}
-              options={options?.branches || []}
-              placeholder="Todas as filiais"
-              onChange={(v) => change("branch", v)}
-            />
-            <SelectFilter
-              label="Destino"
-              value={filters.uf}
-              options={options?.states || []}
-              placeholder="Todos os estados"
-              onChange={(v) => change("uf", v)}
-            />
-            <SelectFilter
-              label="Segmento"
-              value={filters.segment}
-              options={options?.segments || []}
-              placeholder="Todos os segmentos"
-              onChange={(v) => change("segment", v)}
-            />
-            <button
-              className="refresh"
-              onClick={() => setRefresh((r) => r + 1)}
-            >
-              <RefreshCw size={17} />
-              {activeFilters > 0 && <b>{activeFilters}</b>}
-            </button>
-          </section>
-        )}
         <div className="page-content">
           {tab === "chat" ? (
             <Chat filters={filters} />

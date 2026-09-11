@@ -1291,9 +1291,12 @@ main {
 }
 header {
   min-height: 42px;
-  margin-bottom: 6px;
+  margin-bottom: 14px;
+  gap: 12px;
+  justify-content: flex-start;
 }
 .page-heading {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 18px;
@@ -1332,6 +1335,8 @@ header {
   letter-spacing: 0.2em;
 }
 .header-actions {
+  flex: 0 0 auto;
+  margin-left: auto;
   gap: 9px;
 }
 .assistant {
@@ -1361,6 +1366,27 @@ header {
   border-radius: 0;
   box-shadow: none;
   background: transparent;
+}
+.header-filters {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-left: 6px;
+  padding: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.header-filters::-webkit-scrollbar {
+  display: none;
+}
+.header-filters > * {
+  flex: 0 0 auto;
+}
+.header-filters .date-range {
+  min-width: 250px;
+}
+.header-filters .select-filter {
+  min-width: 118px;
 }
 .filters label {
   display: none;
@@ -1608,6 +1634,12 @@ header {
   z-index: 1;
 }
 @media (max-width: 1160px) {
+  .top-brand b { display: none; }
+  .assistant {
+    width: 34px;
+    padding: 8px;
+  }
+  .assistant span { display: none; }
   .truck-stage { align-items: flex-end; }
   .trend-side { max-width: 34%; }
   .reference-grid { grid-template-columns: 1.4fr 1fr; }
@@ -1620,6 +1652,10 @@ header {
   .sidebar.open nav button span,
   .sidebar.open .side-status div { opacity: 1; }
   main { padding: 17px 16px 36px; }
+  header { gap: 8px; }
+  .mobile-menu { margin-right: 0; flex: 0 0 40px; }
+  .header-filters { margin-left: 0; }
+  .header-actions .avatar { display: none; }
   .truck-stage { flex-direction: column-reverse; align-items: stretch; }
   .trend-side { max-width: none; width: 100%; }
   .truck-visual { width: 100%; }
