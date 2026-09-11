@@ -1967,6 +1967,16 @@ header {
 .delivery-heatmaps .panel {
   min-height: 385px;
 }
+.state-map-wrap {
+  min-height: 350px;
+  display: grid;
+  place-items: center;
+  margin-top: 8px;
+}
+.state-map-loading {
+  color: #7d8da4;
+  font-size: 12px;
+}
 .state-heatmap {
   display: grid;
   grid-template-columns: repeat(11, minmax(25px, 1fr));

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import ReactECharts from "echarts-for-react";
+import * as echarts from "echarts";
 import {
   Activity,
   ArrowDownRight,
@@ -890,23 +891,59 @@ function Deliveries({ data }: { data: any }) {
     late = data?.lateness || [],
     states: Row[] = data?.destination_states || [],
     cities: Row[] = data?.destination_cities || [];
-  const stateLayout: Record<string, { column: number; row: number }> = {
-    RR: { column: 4, row: 1 }, AP: { column: 7, row: 1 }, AM: { column: 2, row: 2 },
-    PA: { column: 5, row: 2 }, MA: { column: 8, row: 2 }, CE: { column: 10, row: 2 },
-    RN: { column: 11, row: 3 }, PB: { column: 11, row: 4 }, AC: { column: 1, row: 4 },
-    RO: { column: 2, row: 4 }, PI: { column: 8, row: 4 }, PE: { column: 10, row: 4 },
-    AL: { column: 11, row: 5 }, MT: { column: 4, row: 5 },
-    TO: { column: 6, row: 5 }, BA: { column: 9, row: 5 }, SE: { column: 11, row: 5 },
-    MS: { column: 4, row: 7 }, GO: { column: 6, row: 6 }, DF: { column: 7, row: 6 },
-    MG: { column: 8, row: 7 }, ES: { column: 11, row: 7 }, SP: { column: 7, row: 8 },
-    RJ: { column: 9, row: 8 }, PR: { column: 6, row: 9 }, SC: { column: 7, row: 10 },
-    RS: { column: 6, row: 11 },
-  };
+  const [mapReady, setMapReady] = useState(false);
+  useEffect(() => {
+    let active = true;
+    fetch("/maps/brazil-states.geojson")
+      .then((response) => {
+        if (!response.ok) throw new Error("Mapa indisponível");
+        return response.json();
+      })
+      .then((geoJson) => {
+        if (!active) return;
+        echarts.registerMap("brazil", geoJson);
+        setMapReady(true);
+      })
+      .catch(() => setMapReady(false));
+    return () => { active = false; };
+  }, []);
   const stateMax = Math.max(...states.map((r) => Number(r.shipments || 0)), 1);
-  const heatColor = (value: number, max: number) => {
-    const ratio = Math.max(0, Math.min(value / max, 1));
-    const start = [220, 233, 248], end = [23, 70, 143];
-    return `rgb(${start.map((v, i) => Math.round(v + (end[i] - v) * ratio)).join(",")})`;
+  const stateMapOption = {
+    animationDuration: 600,
+    tooltip: {
+      trigger: "item",
+      backgroundColor: colors.navy,
+      borderWidth: 0,
+      textStyle: { color: "#fff" },
+      formatter: (params: any) => {
+        const row = states.find((state) => String(state.uf).toUpperCase() === String(params.name).toUpperCase());
+        return `<strong>${params.name}</strong><br/>Volume: ${formatNumber(row?.shipments, false)}<br/>SLA: ${pct(row?.sla)}<br/>Atrasados: ${formatNumber(row?.delayed, false)}`;
+      },
+    },
+    visualMap: {
+      min: 0,
+      max: stateMax,
+      calculable: false,
+      orient: "horizontal",
+      left: "center",
+      bottom: 0,
+      itemWidth: 110,
+      itemHeight: 8,
+      text: ["Maior volume", "Menor"],
+      textStyle: chartText,
+      inRange: { color: ["#e7f0fc", "#8db2e1", colors.blue] },
+    },
+    series: [{
+      type: "map",
+      map: "brazil",
+      nameProperty: "sigla",
+      roam: false,
+      selectedMode: false,
+      data: states.map((row) => ({ name: String(row.uf).toUpperCase(), value: Number(row.shipments || 0) })),
+      label: { show: true, color: "#486788", fontSize: 9, formatter: (params: any) => params.name },
+      itemStyle: { areaColor: "#edf3fb", borderColor: "#fff", borderWidth: 1.2 },
+      emphasis: { label: { color: "#fff", fontWeight: 700 }, itemStyle: { borderColor: "#fff", borderWidth: 1.5 } },
+    }],
   };
   const cityHeatData = cities
     .slice(0, 12)
@@ -1045,26 +1082,9 @@ function Deliveries({ data }: { data: any }) {
       </section>
       <section className="two-grid delivery-heatmaps">
         <Panel eyebrow="MAPA DE CALOR" title="Volume por estado">
-          <div className="state-heatmap" role="img" aria-label="Mapa de calor do volume de entregas por estado">
-            {states.map((state) => {
-              const uf = String(state.uf || "").toUpperCase();
-              const position = stateLayout[uf];
-              if (!position) return null;
-              const volume = Number(state.shipments || 0);
-              return (
-                <div
-                  className="state-heat-cell"
-                  key={uf}
-                  style={{ gridColumn: position.column, gridRow: position.row, background: heatColor(volume, stateMax) }}
-                  title={`${uf}: ${formatNumber(volume, false)} entregas · SLA ${pct(state.sla)} · ${formatNumber(state.delayed, false)} atrasados`}
-                >
-                  <strong>{uf}</strong>
-                  <small>{formatNumber(volume)}</small>
-                </div>
-              );
-            })}
+          <div className="state-map-wrap" role="img" aria-label="Mapa de calor do volume de entregas por estado">
+            {mapReady ? <ReactECharts option={stateMapOption} style={{ height: 350 }} /> : <div className="state-map-loading">Carregando mapa do Brasil…</div>}
           </div>
-          <div className="heatmap-legend"><span>Menor volume</span><i /><span>Maior volume</span></div>
         </Panel>
         <Panel eyebrow="DETALHE URBANO" title="Calor por cidade">
           <ReactECharts option={cityHeatOption} style={{ height: 330 }} />
