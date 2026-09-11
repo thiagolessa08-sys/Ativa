@@ -1430,7 +1430,10 @@ function Chat({ filters }: { filters: Filters }) {
             </div>
           )}
           {messages.map((m, i) => (
-            <div className={`message ${m.role}`} key={i}>
+            <div
+              className={`message ${m.role === "assistant" ? "bot-message" : "user"}`}
+              key={i}
+            >
               {m.role === "assistant" && (
                 <div className="bot-avatar">
                   <Bot size={19} />
@@ -1470,7 +1473,7 @@ function Chat({ filters }: { filters: Filters }) {
             </div>
           ))}
           {busy && (
-            <div className="message assistant">
+            <div className="message bot-message">
               <div className="bot-avatar">
                 <Bot size={19} />
               </div>

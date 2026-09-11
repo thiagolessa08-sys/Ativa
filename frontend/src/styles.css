@@ -1733,6 +1733,22 @@ header {
   border: 1px solid #e2e9f2;
   box-shadow: 0 12px 32px rgba(17, 40, 79, 0.07);
 }
+.message.bot-message {
+  background: transparent;
+  color: #243853;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+}
+.message.bot-message .bubble {
+  color: #243853;
+  background: #f5f7fb;
+  border: 1px solid #e0e8f2;
+  box-shadow: 0 5px 16px rgba(17, 40, 79, 0.05);
+}
+.message.bot-message .bubble > strong {
+  color: #17468f;
+}
 .chat-window-top {
   display: flex;
   align-items: center;
