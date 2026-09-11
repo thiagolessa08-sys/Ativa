@@ -2062,13 +2062,13 @@ header {
   top: 0;
   height: 100%;
   background-image:
-    linear-gradient(180deg, rgba(18, 58, 121, .86) 0%, rgba(18, 58, 121, .56) 46%, rgba(18, 58, 121, .82) 100%),
+    linear-gradient(180deg, rgba(18, 58, 121, .92) 0%, rgba(18, 58, 121, .72) 46%, rgba(18, 58, 121, .96) 100%),
     url("/login-truck.webp");
   background-position: right center;
   background-size: cover;
   background-repeat: no-repeat;
   background-blend-mode: multiply;
-  opacity: .96;
+  opacity: .76;
   pointer-events: none;
 }
 .login-brand-panel > * {
