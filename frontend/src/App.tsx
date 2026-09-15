@@ -900,10 +900,45 @@ function Operations({ data }: { data: any }) {
   );
 }
 
-function Deliveries({ data }: { data: any }) {
+function Deliveries({ data: baseData, filters }: { data: any; filters: Filters }) {
+  const [selectedUf, setSelectedUf] = useState("");
+  const [drillResult, setDrillResult] = useState<{ uf: string; data?: any; error?: string } | null>(null);
+  const [retry, setRetry] = useState(0);
+  const stateCodes = "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" ");
+  const result = drillResult?.uf === selectedUf ? drillResult : null;
+  const drillLoading = Boolean(selectedUf && !result);
+  const drillError = selectedUf ? result?.error : undefined;
+  const data = selectedUf ? result?.data : baseData;
+  useEffect(() => {
+    if (!selectedUf) return;
+    const controller = new AbortController();
+    setDrillResult(null);
+    fetch(`/api/deliveries?${queryString({ ...filters, uf: selectedUf })}`, { signal: controller.signal })
+      .then(async (response) => {
+        const json = await response.json();
+        if (!response.ok) throw new Error(json.detail || "Não foi possível carregar as entregas deste estado.");
+        return json;
+      })
+      .then((json) => {
+        if (!controller.signal.aborted) setDrillResult({ uf: selectedUf, data: json });
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setDrillResult({ uf: selectedUf, error: "Não foi possível carregar as entregas deste estado." });
+      });
+    return () => controller.abort();
+  }, [selectedUf, filters, retry]);
+  function selectState(uf: string) {
+    if (uf && !stateCodes.includes(uf)) return;
+    setDrillResult(null);
+    setSelectedUf((current) => current === uf ? "" : uf);
+  }
+  function renderDetail(content: React.ReactNode) {
+    if (drillLoading || drillError) return <div className="delivery-drill-placeholder" role="status">{drillLoading ? `Carregando entregas de ${selectedUf}…` : "Dados indisponíveis para esta seleção."}</div>;
+    return content;
+  }
   const sla = data?.sla_trend || [],
     late = data?.lateness || [],
-    states: Row[] = data?.destination_states || [],
+    states: Row[] = baseData?.destination_states || [],
     cities: Row[] = data?.destination_cities || [];
   const [mapReady, setMapReady] = useState(false);
   useEffect(() => {
@@ -949,9 +984,10 @@ function Deliveries({ data }: { data: any }) {
       layoutCenter: ["50%", "45%"],
       layoutSize: "110%",
       zoom: 1,
-      data: states.map((row) => {
-        const value = Number(row.shipments || 0);
-        return { name: String(row.uf).toUpperCase(), value, itemStyle: { areaColor: heatColor(value, stateMax) } };
+      data: stateCodes.map((uf) => {
+        const row = states.find((state) => String(state.uf).toUpperCase() === uf);
+        const value = Number(row?.shipments || 0);
+        return { name: uf, value, itemStyle: { areaColor: heatColor(value, stateMax), ...(selectedUf === uf ? { borderColor: colors.blue, borderWidth: 3 } : {}) }, label: selectedUf === uf ? { color: colors.navy, fontWeight: 800, backgroundColor: colors.yellow, padding: [3, 4], borderRadius: 3 } : {} };
       }),
       label: { show: true, color: "#486788", fontSize: 9, formatter: (params: any) => params.name },
       itemStyle: { areaColor: "#e7f0fc", borderColor: "#fff", borderWidth: 1.2 },
@@ -1072,29 +1108,43 @@ function Deliveries({ data }: { data: any }) {
   };
   return (
     <>
+      <div className="delivery-drill-toolbar">
+        <div>
+          <strong>{selectedUf ? `Entregas · ${selectedUf}` : "Explore as entregas por estado"}</strong>
+          <span>{selectedUf ? "Seleção aplicada somente nesta tela. Clique novamente no estado para limpar." : "Clique em um estado no mapa para filtrar os gráficos e as tabelas."}</span>
+        </div>
+        <label>Estado no mapa
+          <select value={selectedUf} onChange={(event) => selectState(event.target.value)}>
+            <option value="">{filters.uf ? `Recorte atual · ${filters.uf}` : "Todos os estados"}</option>
+            {stateCodes.map((uf) => <option key={uf} value={uf}>{uf}</option>)}
+          </select>
+        </label>
+        {selectedUf && <button className="drill-back" onClick={() => selectState("")}>Limpar seleção</button>}
+      </div>
+      {drillError && <div className="delivery-drill-error" role="alert">{drillError}<button className="drill-back" onClick={() => { setDrillResult(null); setRetry((value) => value + 1); }}>Tentar novamente</button></div>}
       <section className="two-grid">
         <Panel eyebrow="EVOLUÇÃO" title="SLA de entrega">
-          <ReactECharts option={slaOption} style={{ height: 330 }} />
+          {renderDetail(<ReactECharts option={slaOption} notMerge style={{ height: 330 }} />)}
         </Panel>
         <Panel eyebrow="AGING" title="Faixas de atraso">
-          <ReactECharts option={latenessOption} style={{ height: 330 }} />
+          {renderDetail(<ReactECharts option={latenessOption} notMerge style={{ height: 330 }} />)}
         </Panel>
       </section>
       <section className="two-grid delivery-heatmaps">
         <Panel eyebrow="DETALHE URBANO" title="Calor por cidade">
-          <ReactECharts option={cityHeatOption} style={{ height: 390 }} />
+          {renderDetail(<ReactECharts option={cityHeatOption} notMerge style={{ height: 390 }} />)}
           <div className="map-legend"><span>Menor volume</span><i /><span>Maior volume</span></div>
         </Panel>
         <Panel eyebrow="MAPA DE CALOR" title="Volume por estado">
-          <div className="state-map-wrap" role="img" aria-label="Mapa de calor do volume de entregas por estado">
-            {mapReady ? <ReactECharts option={stateMapOption} style={{ height: 390 }} /> : <div className="state-map-loading">Carregando mapa do Brasil…</div>}
+          <div className="state-map-wrap" aria-label="Clique em um estado para filtrar as entregas">
+            {mapReady ? <ReactECharts option={stateMapOption} notMerge style={{ height: 390, cursor: "pointer" }} onEvents={{ click: (params: { name: string }) => selectState(params.name.toUpperCase()) }} /> : <div className="state-map-loading">Carregando mapa do Brasil…</div>}
           </div>
           <div className="map-legend"><span>Menor volume</span><i /><span>Maior volume</span></div>
         </Panel>
       </section>
       <section className="two-grid tables">
         <Panel eyebrow="CAUSAS" title="Ocorrências em aberto">
-          <DataTable
+          {renderDetail(<DataTable
             rows={data?.occurrences || []}
             columns={[
               { key: "occurrence", label: "Ocorrência" },
@@ -1112,10 +1162,10 @@ function Deliveries({ data }: { data: any }) {
                 align: "right",
               },
             ]}
-          />
+          />)}
         </Panel>
         <Panel eyebrow="DESTINOS" title="Cidades com maior volume">
-          <DataTable
+          {renderDetail(<DataTable
             rows={data?.destination_cities || []}
             columns={[
               { key: "city", label: "Cidade" },
@@ -1133,7 +1183,7 @@ function Deliveries({ data }: { data: any }) {
                 align: "right",
               },
             ]}
-          />
+          />)}
         </Panel>
       </section>
     </>
@@ -2000,17 +2050,19 @@ export default function App() {
     if (!auth.username || tab === "chat" || !filters.start) return;
     setLoading(true);
     setError("");
+    const controller = new AbortController();
     const endpoint = tab === "insights" || tab === "predictive" ? "overview" : tab;
     const suffix = endpoint === "sources" ? "" : `?${queryString(filters)}`;
-    fetch(`/api/${endpoint}${suffix}`)
+    fetch(`/api/${endpoint}${suffix}`, { signal: controller.signal })
       .then(async (r) => {
         const j = await r.json();
         if (!r.ok) throw new Error(j.detail || "Falha ao carregar dados");
         return j;
       })
-      .then(setData)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+      .then((json) => { if (!controller.signal.aborted) setData(json); })
+      .catch((e) => { if (!controller.signal.aborted) setError(e.message); })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
   }, [auth.username, tab, filters, refresh]);
   function change(key: keyof Filters, value: string) {
     setFilters((f) => ({ ...f, [key]: value }));
@@ -2171,7 +2223,7 @@ export default function App() {
           ) : tab === "operations" ? (
             <Operations data={data} />
           ) : tab === "deliveries" ? (
-            <Deliveries data={data} />
+            <Deliveries data={data} filters={filters} />
           ) : tab === "finance" ? (
             <Finance data={data} />
           ) : tab === "fleet" ? (

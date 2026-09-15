@@ -1975,6 +1975,31 @@ header {
   width: 150px;
   height: auto;
 }
+.delivery-drill-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(23, 70, 143, .3);
+  border-radius: 10px;
+  background: linear-gradient(145deg, #edf4ff, #f9fbff);
+  color: #17468f;
+}
+.delivery-drill-toolbar > div { flex: 1 1 280px; }
+.delivery-drill-toolbar strong { display: block; font-size: 14px; }
+.delivery-drill-toolbar span { display: block; margin-top: 5px; font-size: 12px; color: #4f6b8e; }
+.delivery-drill-toolbar label { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.delivery-drill-toolbar select {
+  padding: 8px;
+  border: 1px solid #b9cde5;
+  border-radius: 7px;
+  background: #fff;
+  color: #17468f;
+}
+.delivery-drill-placeholder { min-height: 330px; display: grid; place-items: center; color: #4f6b8e; font-size: 13px; }
+.delivery-drill-error { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; color: #a33228; }
 .delivery-heatmaps .panel {
   min-height: 385px;
 }
